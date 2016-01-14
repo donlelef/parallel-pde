@@ -1,16 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-double determinant(double matrix[][2]) {
-	double det = ((matrix[1][0] - matrix[0][0]) * (matrix[2][1] - matrix[0][1])
-			- (matrix[2][0] - matrix[0][0]) * (matrix[1][1] - matrix[0][1]));
-	return det;
+void printMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+	int i = 0, j = 0;
+	for (i = 0; i < xDim; i++) {
+		for (j = 0; j < yDim; j++) {
+			fprintf(fout, "%lf ", *(matrix + i * yDim + j));
+		}
+		fprintf(fout, "\n");
+	}
+	fclose(fout);
+}
+
+void printSparseMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+	int i = 0, j = 0;
+	for (i = 0; i < xDim; i++) {
+		for (j = 0; j < yDim; j++) {
+			double element = *(matrix + i * yDim + j);
+			if (element != 0.0) {
+				fprintf(fout, "(%d %d) %lf\n", i, j, *(matrix + i * yDim + j));
+			}
+		}
+	}
+	fclose(fout);
 }
 
 double triangleArea(double vertices[][2]) {
 	double area = 0;
-	area = 0.5 * determinant(vertices);
+	area = 0.5
+			* ((vertices[1][0] - vertices[0][0])
+					* (vertices[2][1] - vertices[0][1])
+					- (vertices[2][0] - vertices[0][0])
+							* (vertices[1][1] - vertices[0][1]));
+	area = fabs(area);
 	return area;
 }
 
@@ -22,11 +46,11 @@ void localVector(double vertices[][2], double f, double localB[]) {
 	}
 }
 
-double scalarProduct(double x[], double y[]) {
+double scalarProduct(double x[], double y[], int length) {
 	int i = 0;
 	double res = 0;
-	for (i = 0; i < sizeof(x) / sizeof(double); i++) {
-		res += x[1] * y[i];
+	for (i = 0; i < length; i++) {
+		res += x[i] * y[i];
 	}
 	return res;
 }
@@ -46,7 +70,7 @@ void localStiffnessMatrix(double vertices[][2], double localW[][3]) {
 
 	for (i = 0; i < 3; i++) {
 		for (j = 0; j < 3; j++) {
-			localW[i][j] = 1 / (4 * area) * scalarProduct(edges[i], edges[j]);
+			localW[i][j] = 1 / (4 * area) * scalarProduct(edges[i], edges[j], 2);
 		}
 	}
 }
@@ -87,58 +111,49 @@ double* zeros(int dim) {
 	return vector;
 }
 
-void printMatrix(double *matrix, int xDim, int yDim, char* fileName) {
-	int i = 0, j = 0;
-	FILE* fout = fopen(fileName, "w");
-	for (i = 0; i < xDim; i++) {
-		for (j = 0; j < yDim; j++) {
-			fprintf(fout, "%lf ", *(matrix + i * yDim + j));
-		}
-		fprintf(fout, "\n");
-	}
-	fclose(fout);
-}
-
 int main(int argc, char **argv) {
-
-	int f = -4, vertexSize, globalVertex2, globalVertex;
-	int tri = 0, localVert = 0, localVertex2 = 0;
+	int vertexSize, globalVertex2, globalVertex, meshSize;
+	int tri = 0, i = 0, j = 0;
+	double f = -4;
 	double vertices[3][2] = { { 0 } };
 	double localW[3][3] = { { 0 } };
 	double localB[3] = { 0 };
 	FILE* meshFile = fopen("data/p.csv", "r");
 	FILE* vertexFile = fopen("data/t.csv", "r");
 
-	double* meshPoints = readMatrixFile(meshFile, lineCount(meshFile), 2);
 	vertexSize = lineCount(vertexFile);
-	double* vertexNumbers = readMatrixFile(vertexFile, vertexSize, 3);
+	meshSize = lineCount(meshFile);
+	double* meshPoints = readMatrixFile(meshFile, lineCount(meshFile), 2);
+	double* vertexNumbers = readMatrixFile(vertexFile, lineCount(vertexFile), 3);
 
-	double* w = zeros(vertexSize * vertexSize);
-	double* b = zeros(vertexSize);
+	double* w = zeros(meshSize * meshSize);
+	double* b = zeros(meshSize);
 
 	for (tri = 0; tri < vertexSize; tri++) {
-		for (localVert = 0; localVert < 3; localVert++) {
-			globalVertex = (int) *(vertexNumbers + tri * 3 + localVert);
-			vertices[localVert][0] = *(meshPoints + globalVertex * 2 + 0);
-			vertices[localVert][1] = *(meshPoints + globalVertex * 2 + 1);
+		for (i = 0; i < 3; i++) {
+			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+			vertices[i][0] = *(meshPoints + globalVertex * 2 + 0);
+			vertices[i][1] = *(meshPoints + globalVertex * 2 + 1);
 		}
 
 		localStiffnessMatrix(vertices, localW);
 		localVector(vertices, f, localB);
 
-		for (localVert = 0; localVert < 3; localVert++) {
-			globalVertex = *(vertexNumbers + tri * 3 + localVert);
-			b[globalVertex] += localB[localVert];
-			for (localVertex2 = 0; localVertex2 < 3; localVertex2++) {
-				globalVertex2 = (int) *(vertexNumbers + tri * 3 + localVertex2);
-				*(w + globalVertex * vertexSize + globalVertex2) +=
-						localW[localVert][localVertex2];
+		for (i = 0; i < 3; i++) {
+			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+			b[globalVertex] += localB[i];
+			for (j = 0; j < 3; j++) {
+				globalVertex2 = (int) *(vertexNumbers + tri * 3 + j)
+						- 1;
+				*(w + globalVertex * meshSize + globalVertex2) +=
+						localW[i][j];
 			}
 		}
 	}
-	printMatrix(w, vertexSize, vertexSize, "prova.txt");
-
+	printMatrix(w, meshSize, meshSize, fopen("prova.txt", "w"));
+	for(i = 0; i < 32; i++){
+		printf("%lf\n", b[i]);
+	}
 	return 0;
-
 }
 
