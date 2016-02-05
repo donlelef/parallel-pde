@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
+#include <omp.h>
+
+#define TOL 10e-3
 
 void printMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
 	int i = 0, j = 0;
@@ -42,7 +46,7 @@ void localVector(double vertices[][2], double f, double localB[]) {
 	int i;
 	double area = triangleArea(vertices);
 	for (i = 0; i < 3; i++) {
-		localB[i] = 1 / 3 * area * f;
+		localB[i] = (1.0 / 3) * area * f;
 	}
 }
 
@@ -70,14 +74,15 @@ void localStiffnessMatrix(double vertices[][2], double localW[][3]) {
 
 	for (i = 0; i < 3; i++) {
 		for (j = 0; j < 3; j++) {
-			localW[i][j] = 1 / (4 * area) * scalarProduct(edges[i], edges[j], 2);
+			localW[i][j] = 1 / (4 * area)
+					* scalarProduct(edges[i], edges[j], 2);
 		}
 	}
 }
 
 int lineCount(FILE* file) {
 	int lines = 0;
-	char string[20];
+	char string[100];
 	rewind(file);
 
 	while (fgets(string, sizeof(string), file) != NULL) {
@@ -111,24 +116,84 @@ double* zeros(int dim) {
 	return vector;
 }
 
-int main(int argc, char **argv) {
+double* solveSystem(int n, double* matrix, double b[]) {
+
+	int i, j, k;
+	double aux, temp;
+	double* x = zeros(n);
+
+	/* Gaussian elimination */
+	for (i = 0; i < (n - 1); i++) {
+		for (j = (i + 1); j < n; j++) {
+			aux = *(matrix + n * j + i) / *(matrix + n * i + i);
+			for (k = i; k < n; k++) {
+				*(matrix + n * j + k) -= (aux * (*(matrix + n * i + k)));
+			}
+			b[j] -= (aux * b[i]);
+		}
+	}
+
+	/* Back substitution */
+	x[n - 1] = b[n - 1] / *(matrix + n * (n - 1) + n - 1);
+	for (i = (n - 2); i >= 0; i--) {
+		temp = b[i];
+		for (j = (i + 1); j < n; j++) {
+			temp -= (*(matrix + n * i + j) * x[j]);
+		}
+		x[i] = temp / *(matrix + n * i + i);
+	}
+
+	return x;
+}
+
+void assignDirichletCondition(int meshSize, double g, double* meshPoints,
+		double* w, double* b) {
+	int i, j;
+
+	for (i = 0; i < meshSize; i++) {
+		double x = *(meshPoints + 2 * i);
+		double y = *(meshPoints + 2 * i + 1);
+		if (fabs(x * x + y * y - 1) < TOL) {
+			for (j = 0; j < meshSize; j++) {
+				*(w + meshSize * i + j) = (i == j) ? 1 : 0;
+			}
+			b[i] = g;
+		}
+	}
+}
+
+double* solvePDE(char fileP[], char fileT[], FILE* result) {
+
 	int vertexSize, globalVertex2, globalVertex, meshSize;
 	int tri = 0, i = 0, j = 0;
-	double f = -4;
+	double f = -4, g = 1;
 	double vertices[3][2] = { { 0 } };
 	double localW[3][3] = { { 0 } };
-	double localB[3] = { 0 };
-	FILE* meshFile = fopen("data/p.csv", "r");
-	FILE* vertexFile = fopen("data/t.csv", "r");
+	double localB[3] = { 1 };
+
+	FILE* meshFile = fopen(fileP, "r");
+	FILE* vertexFile = fopen(fileT, "r");
 
 	vertexSize = lineCount(vertexFile);
 	meshSize = lineCount(meshFile);
-	double* meshPoints = readMatrixFile(meshFile, lineCount(meshFile), 2);
-	double* vertexNumbers = readMatrixFile(vertexFile, lineCount(vertexFile), 3);
 
+	/* Read files: START */
+	double startIO = omp_get_wtime();
+	double* meshPoints = readMatrixFile(meshFile, lineCount(meshFile), 2);
+	double* vertexNumbers = readMatrixFile(vertexFile, lineCount(vertexFile),
+			3);
+	double ioTime = omp_get_wtime() - startIO;
+	/* Read files: END */
+
+	/* Prepare matrices: START */
+	double startZeros = omp_get_wtime();
 	double* w = zeros(meshSize * meshSize);
 	double* b = zeros(meshSize);
+	double zerosTime = omp_get_wtime() - startZeros;
+	/* Prepare matrices: START */
 
+	/* Assembling: START */
+	double startComputation = omp_get_wtime();
 	for (tri = 0; tri < vertexSize; tri++) {
 		for (i = 0; i < 3; i++) {
 			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
@@ -143,17 +208,62 @@ int main(int argc, char **argv) {
 			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
 			b[globalVertex] += localB[i];
 			for (j = 0; j < 3; j++) {
-				globalVertex2 = (int) *(vertexNumbers + tri * 3 + j)
-						- 1;
-				*(w + globalVertex * meshSize + globalVertex2) +=
-						localW[i][j];
+				globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1;
+				*(w + globalVertex * meshSize + globalVertex2) += localW[i][j];
 			}
 		}
 	}
-	printMatrix(w, meshSize, meshSize, fopen("prova.txt", "w"));
-	for(i = 0; i < 32; i++){
-		printf("%lf\n", b[i]);
-	}
-	return 0;
+	double assemblingTime = omp_get_wtime() - startComputation;
+	/* Assembling: END */
+
+	/* Dirichlet condition: START */
+	double startDirichlet = omp_get_wtime();
+	assignDirichletCondition(meshSize, g, meshPoints, w, b);
+	double dirichletTime = omp_get_wtime() - startDirichlet;
+	/* Dirichlet condition: END */
+
+	/* Solve System: START */
+	double startSys = omp_get_wtime();
+	double* u = solveSystem(meshSize, w, b);
+	double sysTime = omp_get_wtime() - startSys;
+	/* Solve System: END */
+
+	double computationTime = omp_get_wtime() - startComputation;
+	/* Computation: END */
+
+	printf("Elapsed time for computation: %lf seconds.\n", computationTime);
+	printf("Elapsed time for IO: %lf seconds.\n", ioTime);
+	printf("Elapsed time for zeros: %lf seconds.\n", zerosTime);
+	printf("Elapsed time for assembling: %lf seconds.\n", assemblingTime);
+	printf("Elapsed time for dirichlet: %lf seconds.\n", dirichletTime);
+	printf("Elapsed time for system: %lf seconds.\n", sysTime);
+
+	fprintf(result, "%lf, %lf, %lf, %lf, %lf, %lf\n", computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, sysTime);
+
+	return u;
 }
 
+int main(int argc, char **argv) {
+
+	int i;
+	char dirP[50] = "data/p";
+	char dirT[50] = "data/t";
+	char extension[50] = ".csv";
+	char fileP[100];
+	char fileT[100];
+	int files = atoi(argv[1]);
+
+	FILE* result = fopen("res.csv", "w");
+	fprintf(result, "computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, sysTime\n");
+
+	for (i = 0; i < files; i++) {
+		sprintf(fileP, "%s%d%s", dirP, i, extension);
+		sprintf(fileT, "%s%d%s", dirT, i, extension);
+		printf("Iteration %d\n", i);
+		solvePDE(fileP, fileT, result);
+	}
+
+	fclose(result);
+
+	return 0;
+}
