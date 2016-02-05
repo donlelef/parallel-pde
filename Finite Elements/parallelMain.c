@@ -202,6 +202,7 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 
 	/* Assembling: START */
 	double startComputation = omp_get_wtime();
+#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2, vertices, localW, localB) schedule(dynamic)
 	for (tri = 0; tri < vertexSize; tri++) {
 		for (i = 0; i < 3; i++) {
 			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
@@ -214,9 +215,11 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 
 		for (i = 0; i < 3; i++) {
 			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+#pragma omp critical
 			b[globalVertex] += localB[i];
 			for (j = 0; j < 3; j++) {
 				globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1;
+#pragma omp critical
 				*(w + globalVertex * meshSize + globalVertex2) += localW[i][j];
 			}
 		}
