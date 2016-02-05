@@ -110,20 +110,20 @@ double* readMatrixFile(FILE* file, int rows, int columns) {
 double* zeros(int dim) {
 	int i = 0;
 	double* vector = (double*) malloc(sizeof(double) * dim);
+#pragma omp parallel for private(i) schedule(static)
 	for (i = 0; i < dim; i++) {
 		vector[i] = 0;
 	}
 	return vector;
 }
 
-double* backSubstitution(int n, double* matrix, double b[]) {
-
+void gaussianElimination(int n, double* matrix, double b[]){
 	int i, j, k;
-	double aux, temp;
-	double* x = zeros(n);
+	double aux;
 
 	/* Gaussian elimination */
 	for (i = 0; i < (n - 1); i++) {
+#pragma omp parallel for private(aux, j, k) schedule(dynamic)
 		for (j = (i + 1); j < n; j++) {
 			aux = *(matrix + n * j + i) / *(matrix + n * i + i);
 			for (k = i; k < n; k++) {
@@ -132,6 +132,13 @@ double* backSubstitution(int n, double* matrix, double b[]) {
 			b[j] -= (aux * b[i]);
 		}
 	}
+}
+
+double* backSubstitution(int n, double* matrix, double b[]) {
+
+	int i, j;
+	double temp;
+	double* x = zeros(n);
 
 	/* Back substitution */
 	x[n - 1] = b[n - 1] / *(matrix + n * (n - 1) + n - 1);
@@ -150,6 +157,7 @@ void assignDirichletCondition(int meshSize, double g, double* meshPoints,
 		double* w, double* b) {
 	int i, j;
 
+#pragma omp parallel for private(i, j) schedule(dynamic)
 	for (i = 0; i < meshSize; i++) {
 		double x = *(meshPoints + 2 * i);
 		double y = *(meshPoints + 2 * i + 1);
@@ -222,11 +230,17 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 	double dirichletTime = omp_get_wtime() - startDirichlet;
 	/* Dirichlet condition: END */
 
-	/* Solve System: START */
-	double startSys = omp_get_wtime();
+	/* Gaussian Elimination: START */
+	double startGauss = omp_get_wtime();
+	gaussianElimination(meshSize, w, b);
+	double gaussTime = omp_get_wtime() - startGauss;
+	/* Gaussian Elimination: END */
+
+	/* Backward Substitution: START */
+	double startBack = omp_get_wtime();
 	double* u = backSubstitution(meshSize, w, b);
-	double sysTime = omp_get_wtime() - startSys;
-	/* Solve System: END */
+	double backTime = omp_get_wtime() - startBack;
+	/* Backward Substitution: END */
 
 	double computationTime = omp_get_wtime() - startComputation;
 	/* Computation: END */
@@ -236,9 +250,10 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 	printf("Elapsed time for zeros: %lf seconds.\n", zerosTime);
 	printf("Elapsed time for assembling: %lf seconds.\n", assemblingTime);
 	printf("Elapsed time for dirichlet: %lf seconds.\n", dirichletTime);
-	printf("Elapsed time for system: %lf seconds.\n", sysTime);
+	printf("Elapsed time for gaussian elimination: %lf seconds.\n", gaussTime);
+	printf("Elapsed time for back substitution: %lf seconds.\n", backTime);
 
-	fprintf(result, "%lf, %lf, %lf, %lf, %lf, %lf\n", computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, sysTime);
+	fprintf(result, "%lf, %lf, %lf, %lf, %lf, %lf, %lf\n", computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, gaussTime, backTime);
 
 	return u;
 }
@@ -253,8 +268,10 @@ int main(int argc, char **argv) {
 	char fileT[100];
 	int files = atoi(argv[1]);
 
-	FILE* result = fopen("res.csv", "w");
-	fprintf(result, "computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, sysTime\n");
+	omp_set_num_threads(4);
+
+	FILE* result = fopen("resParallel.csv", "w");
+	fprintf(result, "computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, gaussTime, backTime\n");
 
 	for (i = 0; i < files; i++) {
 		sprintf(fileP, "%s%d%s", dirP, i, extension);
