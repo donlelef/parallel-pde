@@ -91,8 +91,30 @@ figs-within-sections
 Parallel Finite Elements Algorithm
 \end_layout
 
-\begin_layout Standard
+\begin_layout Author
+Simone Colucci & Emanuele Fabbiani
+\end_layout
 
+\begin_layout Date
+February 
+\begin_inset Formula $15^{th}$
+\end_inset
+
+, 2016
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+Partial differential equations (PDE) are very useful tools to model several
+ different phenomena in Physics, Biology, Economics and Engineering.
+ Maxwell's laws of Electromagnetic fields and Navier-Stokes equations for
+ fluids are just two examples of major applications of PDE theory.
+ However, PDEs are usually impossible to solve in closed form: numerical
+ methods are required to compute approximate solutions.
+  
 \end_layout
 
 \end_body
