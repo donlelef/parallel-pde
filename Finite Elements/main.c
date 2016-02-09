@@ -240,9 +240,13 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 
 	fprintf(result, "%lf, %lf, %lf, %lf, %lf, %lf\n", computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, sysTime);
 
-	for(i=0;i<meshSize;i++){
-		printf("%lf\n", u[i]);
-	}
+	free(meshFile);
+	free(vertexFile);
+	free(meshPoints);
+	free(vertexNumbers);
+	free(w);
+	free(b);
+	free(u);
 
 	return u;
 }

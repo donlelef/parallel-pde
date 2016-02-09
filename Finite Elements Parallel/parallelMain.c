@@ -281,9 +281,13 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 
 	fprintf(result, "%d; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf\n", meshSize, computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, gaussTime, backTime, computationTimeCPU, ioTimeCPU, zerosTimeCPU, assemblingTimeCPU, dirichletTimeCPU, gaussTimeCPU, backTimeCPU);
 
-//	for(i=0;i<meshSize;i++){
-//		printf("%lf\n", u[i]);
-//	}
+	fclose(meshFile);
+	fclose(vertexFile);
+	free(meshPoints);
+	free(vertexNumbers);
+	free(w);
+	free(b);
+	free(u);
 
 	return u;
 }
@@ -296,11 +300,25 @@ int main(int argc, char **argv) {
 	char extension[50] = ".csv";
 	char fileP[100];
 	char fileT[100];
+	FILE* result;
+
+	if(argc != 3){
+		printf("usage: ./pmain file_number parallel_flag\n");
+		return 1;
+	}
+
 	int files = atoi(argv[1]);
 
-	omp_set_num_threads(4);
+	if(strcmp(argv[2], "-p") == 0){
+		printf("Parallel option enabled...\n");
+		printf("Running with %d threads...\n", omp_get_max_threads());
+		result = fopen("resParallel.csv", "w");
+		omp_set_num_threads(omp_get_max_threads());
+	} else {
+		omp_set_num_threads(1);
+		result = fopen("resSerial.csv", "w");
+	}
 
-	FILE* result = fopen("resParallel.csv", "w");
 	fprintf(result, "meshSize; computationTime; ioTime; zerosTime; assemblingTime; dirichletTime; gaussTime; backTime; computationTimeCPU; ioTimeCPU; zerosTimeCPU; assemblingTimeCPU; dirichletTimeCPU; gaussTimeCPU; backTimeCPU\n");
 
 	for (i = 0; i < files; i++) {
