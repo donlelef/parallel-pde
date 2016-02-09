@@ -109,7 +109,8 @@ double* readMatrixFile(FILE* file, int rows, int columns) {
 
 double* zeros(int dim) {
 	int i = 0;
-	double* vector = (double*) malloc(sizeof(double) * dim);
+	double* vector __attribute__ ((aligned (16)));
+	vector = (double*) malloc(sizeof(double) * dim);
 #pragma omp parallel for private(i) schedule(static)
 	for (i = 0; i < dim; i++) {
 		vector[i] = 0;
@@ -208,7 +209,7 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 	/* Assembling: START */
 	double startComputation = omp_get_wtime();
 	clock_t startComputationCPU = clock();
-//#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2, vertices, localW, localB) schedule(dynamic)
+#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2, vertices, localW, localB) schedule(dynamic)
 	for (tri = 0; tri < vertexSize; tri++) {
 		for (i = 0; i < 3; i++) {
 			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
@@ -219,14 +220,13 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 		localStiffnessMatrix(vertices, localW);
 		localVector(vertices, f, localB);
 
-//#pragma omp critical
 		for (i = 0; i < 3; i++) {
 			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
-//#pragma omp critical
+#pragma omp critical
 			b[globalVertex] += localB[i];
 			for (j = 0; j < 3; j++) {
 				globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1;
-//#pragma omp critical
+#pragma omp critical
 				*(w + globalVertex * meshSize + globalVertex2) += localW[i][j];
 			}
 		}
