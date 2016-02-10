@@ -496,8 +496,7 @@ Model problem
 \end_layout
 
 \begin_layout Standard
-
-Si considera la seguente equazione alle derivate parziali:
+We take the following partial differential equation as a model:
 \begin_inset Formula 
 \begin{equation}
 \begin{cases}
@@ -508,7 +507,8 @@ u=1 & su\:\partial\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}=1
 
 \end_inset
 
-Si osserva che la soluzione del problema è
+We choose this very equation because we can deduce the true solution.
+ If we try 
 \begin_inset Formula 
 \begin{equation}
 u\left(x,y\right)=x^{2}+y^{2}
@@ -516,7 +516,7 @@ u\left(x,y\right)=x^{2}+y^{2}
 
 \end_inset
 
-Si ha infatti:
+we get:
 \begin_inset Formula 
 \begin{equation}
 -\Delta u\left(x,y\right)=-\frac{\partial^{2}u\left(x,y\right)}{\partial x^{2}}-\frac{\partial^{2}u\left(x,y\right)}{\partial y^{2}}=-2-2=-4
@@ -524,11 +524,11 @@ Si ha infatti:
 
 \end_inset
 
-Dato che è dimostrato che la soluzione di un simile problema è unica, 
+As the solution to such a problem is proved to be unique, 
 \begin_inset Formula $u\left(x,y\right)$
 \end_inset
 
- rappresenta tale soluzione.
+ is the function we are looking for.
 \end_layout
 
 \end_body
