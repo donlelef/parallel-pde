@@ -491,5 +491,45 @@ It can be proved that this formula is exact if and only if the function
 .
 \end_layout
 
+\begin_layout Subsection
+Model problem
+\end_layout
+
+\begin_layout Standard
+
+Si considera la seguente equazione alle derivate parziali:
+\begin_inset Formula 
+\begin{equation}
+\begin{cases}
+-\Delta u\left(x,y\right)=-4 & in\:\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}\leq1\right\} \\
+u=1 & su\:\partial\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}=1\right\} 
+\end{cases}
+\end{equation}
+
+\end_inset
+
+Si osserva che la soluzione del problema è
+\begin_inset Formula 
+\begin{equation}
+u\left(x,y\right)=x^{2}+y^{2}
+\end{equation}
+
+\end_inset
+
+Si ha infatti:
+\begin_inset Formula 
+\begin{equation}
+-\Delta u\left(x,y\right)=-\frac{\partial^{2}u\left(x,y\right)}{\partial x^{2}}-\frac{\partial^{2}u\left(x,y\right)}{\partial y^{2}}=-2-2=-4
+\end{equation}
+
+\end_inset
+
+Dato che è dimostrato che la soluzione di un simile problema è unica, 
+\begin_inset Formula $u\left(x,y\right)$
+\end_inset
+
+ rappresenta tale soluzione.
+\end_layout
+
 \end_body
 \end_document
