@@ -88,7 +88,7 @@ figs-within-sections
 \begin_body
 
 \begin_layout Title
-Parallel Finite Elements Algorithm
+Finite Elements Methods: a parallel implementation
 \end_layout
 
 \begin_layout Author
@@ -103,18 +103,432 @@ February
 , 2016
 \end_layout
 
+\begin_layout Abstract
+TODO
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Introduction
 \end_layout
 
 \begin_layout Standard
-Partial differential equations (PDE) are very useful tools to model several
- different phenomena in Physics, Biology, Economics and Engineering.
+Partial differential equations (PDE) are differential equations where the
+ unknown is a multivariable function.
+ Far from being just complex mathematical problems, PDE are very useful
+ tools to model several different phenomena in Physics, Biology, Economics
+ and Engineering.
  Maxwell's laws of Electromagnetic fields and Navier-Stokes equations for
  fluids are just two examples of major applications of PDE theory.
  However, PDEs are usually impossible to solve in closed form: numerical
  methods are required to compute approximate solutions.
-  
+ The most used methods to solve PDE numerically are known as Finite Element
+ Methods.
+ First introduced in the '40s FEMs utility was underestimated at the time
+ because of the lack of computational power.
+ Nowadays they enter the design process of planes, buildings and cars as
+ a low-cost and effective alternative to real stress tests.
+\end_layout
+
+\begin_layout Subsection
+The Finite Element Method
+\end_layout
+
+\begin_layout Standard
+To understand how the method works, we consider an elliptic homogeneous
+ equation:
+\begin_inset Formula 
+\begin{equation}
+\begin{cases}
+-\Delta u\left(x,y\right)=f\left(x,y\right) & in\:\Omega\\
+u=g\left(x,y\right) & su\:\partial\Omega
+\end{cases}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\Delta u\left(x,y\right)=\frac{\partial^{2}u\left(x,y\right)}{\partial x^{2}}+\frac{\partial^{2}u\left(x,y\right)}{\partial y^{2}}$
+\end_inset
+
+ and 
+\begin_inset Formula $f:\mathbb{R}^{2}\mapsto\mathbb{R}$
+\end_inset
+
+ is a well-defined function in 
+\begin_inset Formula $\Omega\in\mathbb{R}^{2}$
+\end_inset
+
+.
+ FEMs are based on the weak formulation of the differential problem, so
+ we have to introduce a test function 
+\begin_inset Formula $v$
+\end_inset
+
+, which is supposed to be regular enough.
+ We multiply the differential equation by 
+\begin_inset Formula $v$
+\end_inset
+
+ and we integrate over 
+\begin_inset Formula $\Omega$
+\end_inset
+
+:
+\begin_inset Formula 
+\begin{equation}
+\int_{\Omega}\left(-\Delta u\right)v=\int_{\Omega}fv
+\end{equation}
+
+\end_inset
+
+Then we apply the Gauss-Green formula:
+\begin_inset Formula 
+\begin{equation}
+\int_{\Omega}\Delta uv+\int_{\Omega}\nabla u\cdot\nabla v=\int_{\partial\Omega}v\frac{\partial u}{\partial n}
+\end{equation}
+
+\end_inset
+
+And we choose 
+\begin_inset Formula $v$
+\end_inset
+
+ such that 
+\begin_inset Formula $v|_{\partial\Omega}\equiv0$
+\end_inset
+
+.
+ We got to the weak formulation:
+\begin_inset Formula 
+\begin{equation}
+\int_{\Omega}\nabla u\cdot\nabla v=\int_{\partial\Omega}v\frac{\partial u}{\partial n}+\int_{\Omega}fv
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+\int_{\Omega}\nabla u\cdot\nabla v=\int_{\Omega}fv\label{eq:debole}
+\end{equation}
+
+\end_inset
+
+This equation should hold for every 
+\begin_inset Formula $v$
+\end_inset
+
+.
+ Up to here, no approximation has been performed.
+ Form now on, the Finite Elements approximation begins.
+ We approximate the set 
+\begin_inset Formula $\Omega$
+\end_inset
+
+ with the union of triangles 
+\begin_inset Formula $\mathcal{T}_{h}$
+\end_inset
+
+.
+\begin_inset Formula 
+\begin{equation}
+\Omega\simeq\bigcup_{T\in\mathcal{T}_{h}}T
+\end{equation}
+
+\end_inset
+
+The equality holds only if 
+\begin_inset Formula $\Omega$
+\end_inset
+
+ is a polygon.
+ The length 
+\begin_inset Formula $h$
+\end_inset
+
+ of the longest edge of a triangle 
+\begin_inset Formula $T\in\mathcal{T}_{h}$
+\end_inset
+
+ is a good index about how fine the mesh is.
+ Then we approximate the function 
+\begin_inset Formula $u$
+\end_inset
+
+ with a new function 
+\begin_inset Formula $u_{h}$
+\end_inset
+
+, which is supposed to be linear on every triangle 
+\begin_inset Formula $T$
+\end_inset
+
+ and continuous on 
+\begin_inset Formula $\Omega$
+\end_inset
+
+; moreover we want the test function 
+\begin_inset Formula $v$
+\end_inset
+
+ to present the same features.
+ To underline the restriction, 
+\begin_inset Formula $v$
+\end_inset
+
+ will be called 
+\begin_inset Formula $v_{h}$
+\end_inset
+
+.
+ It is possible to show that the functional space 
+\begin_inset Formula $u_{h}$
+\end_inset
+
+ and 
+\begin_inset Formula $v_{h}$
+\end_inset
+
+ belong to has a dimension which is finite and equals the number 
+\begin_inset Formula $n$
+\end_inset
+
+ of vertexes of triangles in the internal of the set 
+\begin_inset Formula $\Omega$
+\end_inset
+
+.
+ We define 
+\begin_inset Formula $\varphi_{i}$
+\end_inset
+
+, 
+\begin_inset Formula $i=1...n$
+\end_inset
+
+ a set of functions which is a basis for the functional space 
+\begin_inset Formula $v$
+\end_inset
+
+ and 
+\begin_inset Formula $u$
+\end_inset
+
+ belongs to:
+\begin_inset Formula 
+\begin{equation}
+u_{h}\left(x,y\right)=\sum_{i=1}^{n}u_{i}\varphi_{i}\left(x,y\right)
+\end{equation}
+
+\end_inset
+
+The equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:debole"
+
+\end_inset
+
+ is verified by every 
+\begin_inset Formula $v$
+\end_inset
+
+ if and only if it holds for all the elements 
+\begin_inset Formula $\varphi_{j}$
+\end_inset
+
+ in a basis of the functional space.
+ We impose this condition and we get to the following linear system:
+\begin_inset Formula 
+\begin{equation}
+\sum_{i=1}^{n}u_{i}\int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{j}=\int_{\Omega}f\cdot\varphi_{j}\;\;\forall j=1...n
+\end{equation}
+
+\end_inset
+
+We define 
+\begin_inset Formula $W=\left\{ W_{i,j}\right\} =\int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{j}$
+\end_inset
+
+, 
+\begin_inset Formula $u=\left\{ u_{i}\right\} $
+\end_inset
+
+ and 
+\begin_inset Formula $b=\left\{ b_{j}\right\} \coloneqq\int_{\Omega}f\cdot\varphi_{j}$
+\end_inset
+
+, so that we can write the system in matrix form:
+\begin_inset Formula 
+\begin{equation}
+Wu=b
+\end{equation}
+
+\end_inset
+
+We can exploit the linearity of the integral to ease the computation of
+ 
+\begin_inset Formula $W$
+\end_inset
+
+ and 
+\begin_inset Formula $b$
+\end_inset
+
+: we can compute the contribution on every triangle 
+\begin_inset Formula $T$
+\end_inset
+
+ and then sum them up.
+ We choose the easiest set of basic functions 
+\begin_inset Formula $\varphi$
+\end_inset
+
+, that is the 
+\begin_inset Formula $\varphi_{j}=1$
+\end_inset
+
+ on the vertex with index 
+\begin_inset Formula $j$
+\end_inset
+
+ and 0 on all the others.
+ The computation of the local matrix 
+\begin_inset Formula $W_{T}$
+\end_inset
+
+ of the triangle 
+\begin_inset Formula $T$
+\end_inset
+
+ lead to a symmetric matrix:
+\begin_inset Formula 
+\begin{equation}
+W_{T}=\begin{bmatrix}\int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{i} & \int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{j} & \int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{k}\\
+\int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{j} & \int_{\Omega}\nabla\varphi_{j}\cdot\nabla\varphi_{j} & \int_{\Omega}\nabla\varphi_{j}\cdot\nabla\varphi_{k}\\
+\int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{k} & \int_{\Omega}\nabla\varphi_{j}\cdot\nabla\varphi_{k} & \int_{\Omega}\nabla\varphi_{k}\cdot\nabla\varphi_{k}
+\end{bmatrix}=\frac{1}{4\left|T\right|}\begin{bmatrix}l_{i}\cdot l_{i} & l_{i}\cdot l_{j} & l_{i}\cdot l_{k}\\
+l_{j}\cdot l_{i} & l_{j}\cdot l_{j} & l_{j}\cdot l_{k}\\
+l_{k}\cdot l_{i} & l_{k}\cdot l_{j} & l_{k}\cdot l_{k}
+\end{bmatrix}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\left|T\right|$
+\end_inset
+
+ is the area of the triangle and 
+\begin_inset Formula $l_{i}\cdot l_{j}$
+\end_inset
+
+ is the scalar product between the edges described by the vectors 
+\begin_inset Formula $l_{i}$
+\end_inset
+
+ and 
+\begin_inset Formula $l_{j}$
+\end_inset
+
+.
+ We can compute the local right-hand side 
+\begin_inset Formula $b_{T}$
+\end_inset
+
+, using some quadrature formula.
+ We choose the barycentre formula, the easiest one:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+b_{T}=\begin{bmatrix}\int_{\Omega}f\cdot\varphi_{i}\\
+\int_{\Omega}f\cdot\varphi_{j}\\
+\int_{\Omega}f\cdot\varphi_{k}
+\end{bmatrix}\simeq\frac{\left|T\right|}{3}\begin{bmatrix}f\left(x_{B},y_{B}\right)\\
+f\left(x_{B},y_{B}\right)\\
+f\left(x_{B},y_{B}\right)
+\end{bmatrix}
+\end{equation}
+
+\end_inset
+
+dove
+\begin_inset Formula 
+\begin{equation}
+x_{B}=\frac{1}{3}\sum_{i=1}^{3}x_{i}
+\end{equation}
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{equation}
+y_{B}=\frac{1}{3}\sum_{i=1}^{3}y_{i}
+\end{equation}
+
+\end_inset
+
+It can be proved that this formula is exact if and only if the function
+ 
+\begin_inset Formula $f$
+\end_inset
+
+ is constant on the border of 
+\begin_inset Formula $\Omega$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Model problem
+\end_layout
+
+\begin_layout Standard
+
+Si considera la seguente equazione alle derivate parziali:
+\begin_inset Formula 
+\begin{equation}
+\begin{cases}
+-\Delta u\left(x,y\right)=-4 & in\:\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}\leq1\right\} \\
+u=1 & su\:\partial\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}=1\right\} 
+\end{cases}
+\end{equation}
+
+\end_inset
+
+Si osserva che la soluzione del problema è
+\begin_inset Formula 
+\begin{equation}
+u\left(x,y\right)=x^{2}+y^{2}
+\end{equation}
+
+\end_inset
+
+Si ha infatti:
+\begin_inset Formula 
+\begin{equation}
+-\Delta u\left(x,y\right)=-\frac{\partial^{2}u\left(x,y\right)}{\partial x^{2}}-\frac{\partial^{2}u\left(x,y\right)}{\partial y^{2}}=-2-2=-4
+\end{equation}
+
+\end_inset
+
+Dato che è dimostrato che la soluzione di un simile problema è unica, 
+\begin_inset Formula $u\left(x,y\right)$
+\end_inset
+
+ rappresenta tale soluzione.
 \end_layout
 
 \end_body
