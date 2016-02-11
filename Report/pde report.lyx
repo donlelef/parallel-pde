@@ -78,6 +78,7 @@ figs-within-sections
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
+\listings_params "language=C,keywordstyle={\color{cyan}},commentstyle={\color{magenta}\itshape},emphstyle={\color{blue}},emph={int,char,double,float,unsigned},breaklines=true,basicstyle={\ttfamily},stringstyle={\color{green}},identifierstyle={\color{black}},numbers=left,numbersep=3pt,tabsize=2"
 \tracking_changes false
 \output_changes false
 \html_math_output 0
@@ -149,7 +150,7 @@ To understand how the method works, we consider an elliptic homogeneous
 \begin{equation}
 \begin{cases}
 -\Delta u\left(x,y\right)=f\left(x,y\right) & in\:\Omega\\
-u=g\left(x,y\right) & su\:\partial\Omega
+u=g\left(x,y\right) & on\:\partial\Omega
 \end{cases}
 \end{equation}
 
@@ -501,7 +502,7 @@ We take the following partial differential equation as a model:
 \begin{equation}
 \begin{cases}
 -\Delta u\left(x,y\right)=-4 & in\:\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}\leq1\right\} \\
-u=1 & su\:\partial\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}=1\right\} 
+u=1 & on\:\partial\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}=1\right\} 
 \end{cases}
 \end{equation}
 
@@ -529,6 +530,767 @@ As the solution to such a problem is proved to be unique,
 \end_inset
 
  is the function we are looking for.
+\end_layout
+
+\begin_layout Section
+Serial Implementation
+\end_layout
+
+\begin_layout Standard
+We shall consider now the actual C-language implementation of the algorithm
+ that does approximate the solution of the given problem with a finite elements
+ approach.
+ In order to focus on the interesting parts, we will disregard I/O operation
+ that allow the program to obtain required parameters and print output results
+ and diagnostic log messages.
+ 
+\end_layout
+
+\begin_layout Standard
+Roughly speaking, the developed code can easily be split into four parts:
+ 
+\end_layout
+
+\begin_layout Enumerate
+Memory allocation and initialization for both the Stiffness matrix 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang english
+
+\begin_inset Formula $W$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang british
+ and the right-hand side
+\begin_inset Formula $b$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Computation of the global Stiffness matrix 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang english
+
+\begin_inset Formula $W$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang british
+ and the global right-hand side 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\strikeout off
+\uuline off
+\uwave off
+\noun off
+\color none
+\lang english
+
+\begin_inset Formula $b$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\strikeout default
+\uuline default
+\uwave default
+\noun default
+\color inherit
+\lang british
+ by computing and assembling local ones.
+\end_layout
+
+\begin_layout Enumerate
+Assignment of Dirichlet conditions.
+\end_layout
+
+\begin_layout Enumerate
+Solution of the linear system given by 
+\begin_inset Formula 
+\begin{equation}
+Wu=b
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Memory allocation and variable initialization
+\end_layout
+
+\begin_layout Standard
+As we stated, the very first task that the algorithm must handle is a proper
+ memory dynamic allocation that allow us to store both the Stiffness matrix
+ and the right-hand side.
+ In order to improve memory usage and to uniform access, the matrix is indeed
+ stored as a linear 1D vector.
+ The function that implement this initialization is shown below.
+\end_layout
+
+\begin_layout Standard
+Disregarding the initial part that simply allocates required memory space,
+ we notice that the initialization actually result in 
+\begin_inset Formula $n$
+\end_inset
+
+ store calls, 
+\begin_inset Formula $n$
+\end_inset
+
+ being the dimension of the vector.
+ In our case, that lead us to 
+\begin_inset Formula $n^{2}+n$
+\end_inset
+
+ store calls, with this time 
+\begin_inset Formula $n$
+\end_inset
+
+ equal to the number of vertices in the given mesh.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double* zeros(int dim) { 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	int i = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+	double* vector = (double*) malloc(sizeof(double) * dim); 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < dim; i++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		vector[i] = 0; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	return vector; 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Memory allocation and variable initialization
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Assembling of the Stiffness matrix and the right-hand side
+\end_layout
+
+\begin_layout Standard
+The code under consideration is shown below
+\end_layout
+
+\begin_layout Standard
+The assembling operation is realized by calling, for each one of the 
+\begin_inset Formula $n$
+\end_inset
+
+ vertices in the matrix, two functions that compute local elements and then
+ storing them back to the global ones (the very ones initialized at the
+ previous step).
+ Since the computation of local element uses only values at the three vertices
+ of the triangle under consideration, its complexity is independent from
+ 
+\begin_inset Formula $n$
+\end_inset
+
+, and can thus be ignored.
+ As a result, we can state that the complexity of the assembling task is
+ linear ( 
+\begin_inset Formula $\sim n$
+\end_inset
+
+ ) with the dimension of the mesh.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+for (tri = 0; tri < vertexSize; tri++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < 3; i++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		vertices[i][0] = *(meshPoints + globalVertex * 2 + 0); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		vertices[i][1] = *(meshPoints + globalVertex * 2 + 1); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\end_layout
+
+\begin_layout Plain Layout
+
+	localStiffnessMatrix(vertices, localW); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	localVector(vertices, f, localB);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < 3; i++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		b[globalVertex] += localB[i]; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (j = 0; j < 3; j++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+			globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1; 				
+\end_layout
+
+\begin_layout Plain Layout
+
+			*(w + globalVertex * meshSize + globalVertex2) += localW[i][j]; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Assembling of the Stiffness matrix and the right-hand side
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Dirichlet conditions assignment
+\end_layout
+
+\begin_layout Standard
+At this point, before starting the computation of the solution, we must
+ assign particular values to the Stiffness matrix and the right-hand side
+ in order to make Dirichlet conditions hold on the boundary of the domain
+ under consideration.
+ In other words, we have to retrieve those vertices that do belong to the
+ boundary of the domain and assign particular values at the correspondent
+ position.
+ By looking at the function, whose code implementation is shown below, we
+ can easily notice that the number of operations is in the order of 
+\begin_inset Formula $n\cdot(1+n_{boundary})$
+\end_inset
+
+ where 
+\begin_inset Formula $n_{boundary}$
+\end_inset
+
+ is the number of vertices on the boundary.
+ Since, as 
+\begin_inset Formula $n$
+\end_inset
+
+ grows, this number is much less than the total number 
+\begin_inset Formula $n$
+\end_inset
+
+, the total number of operations is approximately linear with 
+\begin_inset Formula $n$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void assignDirichletCondition(int meshSize, double g, double* meshPoints,
+ double* w, double* b) { 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	int i, j;
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < meshSize; i++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		double x = *(meshPoints + 2 * i); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		double y = *(meshPoints + 2 * i + 1); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		if (fabs(x * x + y * y - 1) < TOL) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			for (j = 0; j < meshSize; j++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+				*(w + meshSize * i + j) = (i == j) ? 1 : 0; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			} 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			b[i] = g; 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Dirichlet conditions assignment
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Computation of the approximate solution
+\end_layout
+
+\begin_layout Standard
+Finally, with both the matrix and the right-hand side properly computed,
+ it is possible to compute the FEM approximation of the solution 
+\begin_inset Formula $u$
+\end_inset
+
+.
+ Technically speaking, that requires to solve a linear system with 
+\begin_inset Formula $n$
+\end_inset
+
+ equations in 
+\begin_inset Formula $n$
+\end_inset
+
+ unknowns.
+ This is achieved with two functions that implement the Gaussian Elimination
+ algorithm: at first, the whole system is changed with several pivot operations
+ till an upper-triangular structure is reached; then, the solutions is computed
+ backward.
+ The cost for computing the upper triangular system is of the order of 
+\begin_inset Formula $\frac{n^{3}}{3}$
+\end_inset
+
+ ; the cost for solving the upper triangular system is 
+\begin_inset Formula $n^{2}$
+\end_inset
+
+ , so that the total number of operations is 
+\begin_inset Formula $\text{\sim}\frac{n^{3}}{3}+n^{2}$
+\end_inset
+
+.
+ As we will see later, this is actually the bottleneck of the whole program.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double* gaussianElimination(int n, double* matrix, double b[]) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	int i, j, k; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	double aux, temp; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	double* x = zeros(n);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	/* Gaussian elimination */ 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < (n - 1); i++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (j = (i + 1); j < n; j++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			aux = *(matrix + n * j + i) / *(matrix + n * i + i); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			for (k = i; k < n; k++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+				*(matrix + n * j + k) -= (aux * (*(matrix + n * i + k))); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			} 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			b[j] -= (aux * b[i]); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	/* Back substitution */ 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	x[n - 1] = b[n - 1] / *(matrix + n * (n - 1) + n - 1); 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = (n - 2); i >= 0; i--) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		temp = b[i]; 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (j = (i + 1); j < n; j++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			temp -= (*(matrix + n * i + j) * x[j]); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		x[i] = temp / *(matrix + n * i + i); 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+	return x; 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computation of the approximate solution
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Profiling
+\end_layout
+
+\begin_layout Standard
+Analisi tempi di esecuzione del codice seriale.
+\end_layout
+
+\begin_layout Section
+Parallelization study
+\end_layout
+
+\begin_layout Section
+Parallel implementation
+\end_layout
+
+\begin_layout Section
+Simulations
+\end_layout
+
+\begin_layout Section
+Result analysis
+\end_layout
+
+\begin_layout Section
+A bit of insight
 \end_layout
 
 \end_body
