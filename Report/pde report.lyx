@@ -78,6 +78,7 @@ figs-within-sections
 \papercolumns 1
 \papersides 1
 \paperpagestyle default
+\listings_params "language=C,keywordstyle={\color{cyan}},commentstyle={\color{magenta}\itshape},emphstyle={\color{blue}},emph={int,char,double,float,unsigned},breaklines=true,basicstyle={\ttfamily},stringstyle={\color{green}},identifierstyle={\color{black}},numbers=left,numbersep=3pt,tabsize=2"
 \tracking_changes false
 \output_changes false
 \html_math_output 0
@@ -149,7 +150,7 @@ To understand how the method works, we consider an elliptic homogeneous
 \begin{equation}
 \begin{cases}
 -\Delta u\left(x,y\right)=f\left(x,y\right) & in\:\Omega\\
-u=g\left(x,y\right) & su\:\partial\Omega
+u=g\left(x,y\right) & on\:\partial\Omega
 \end{cases}
 \end{equation}
 
@@ -501,7 +502,7 @@ We take the following partial differential equation as a model:
 \begin{equation}
 \begin{cases}
 -\Delta u\left(x,y\right)=-4 & in\:\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}\leq1\right\} \\
-u=1 & su\:\partial\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}=1\right\} 
+u=1 & on\:\partial\Omega=\left\{ \left(x,y\right)\in\mathbb{R}^{2}:x^{2}+y^{2}=1\right\} 
 \end{cases}
 \end{equation}
 
@@ -529,6 +530,475 @@ As the solution to such a problem is proved to be unique,
 \end_inset
 
  is the function we are looking for.
+\end_layout
+
+\begin_layout Section
+Serial Implementation
+\end_layout
+
+\begin_layout Standard
+vinfcviepvcmepvmpemvpemvcop
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double* zeros(int dim) { 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	int i = 0;
+\end_layout
+
+\begin_layout Plain Layout
+
+	double* vector = (double*) malloc(sizeof(double) * dim); 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < dim; i++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		vector[i] = 0; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	return vector; 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Zeros() TODO!!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+double* gaussianElimination(int n, double* matrix, double b[]) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	int i, j, k; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	double aux, temp; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	double* x = zeros(n);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	/* Gaussian elimination */ 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < (n - 1); i++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (j = (i + 1); j < n; j++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			aux = *(matrix + n * j + i) / *(matrix + n * i + i); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			for (k = i; k < n; k++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+				*(matrix + n * j + k) -= (aux * (*(matrix + n * i + k))); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			} 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			b[j] -= (aux * b[i]); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	/* Back substitution */ 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	x[n - 1] = b[n - 1] / *(matrix + n * (n - 1) + n - 1); 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = (n - 2); i >= 0; i--) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		temp = b[i]; 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (j = (i + 1); j < n; j++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			temp -= (*(matrix + n * i + j) * x[j]); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		x[i] = temp / *(matrix + n * i + i); 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+	return x; 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+GEM() TODO!!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+for (tri = 0; tri < vertexSize; tri++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < 3; i++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		vertices[i][0] = *(meshPoints + globalVertex * 2 + 0); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		vertices[i][1] = *(meshPoints + globalVertex * 2 + 1); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\end_layout
+
+\begin_layout Plain Layout
+
+	localStiffnessMatrix(vertices, localW); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	localVector(vertices, f, localB);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < 3; i++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		b[globalVertex] += localB[i]; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (j = 0; j < 3; j++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+			globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1; 				
+\end_layout
+
+\begin_layout Plain Layout
+
+			*(w + globalVertex * meshSize + globalVertex2) += localW[i][j]; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+ASSEMBLING() TODO!!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void assignDirichletCondition(int meshSize, double g, double* meshPoints,
+ double* w, double* b) { 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	int i, j;
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < meshSize; i++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		double x = *(meshPoints + 2 * i); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		double y = *(meshPoints + 2 * i + 1); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		if (fabs(x * x + y * y - 1) < TOL) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			for (j = 0; j < meshSize; j++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+				*(w + meshSize * i + j) = (i == j) ? 1 : 0; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			} 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			b[i] = g; 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+DIRICHLET() TODO!!
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_body
