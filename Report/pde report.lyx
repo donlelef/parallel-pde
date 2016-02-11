@@ -1270,7 +1270,47 @@ Profiling
 \end_layout
 
 \begin_layout Standard
-Analisi tempi di esecuzione del codice seriale.
+After this brief study of the theoretical complexity of each one of the
+ kernel functions, we shall now analyze the actual results obtained by running
+ the code on a computer machine.
+ 
+\end_layout
+
+\begin_layout Standard
+Several simulations were run on a Intel i7-2630QM machine to study the computati
+on time growth with respect to different mesh dimensions.
+ All interesting parameters related to the CPU under consideration are listed
+ below.
+\end_layout
+
+\begin_layout Standard
+For each function, we computed both the wall clock time, which is the actual
+ amount of time taken to perform the job, and the CPU time, which is on
+ the other hand the function held the CPU during its execution.
+ In order to keep the overhead as light as we could, we avoided the usage
+ of professional profiling tools, which by the way usually offer sampling
+ frequencies which are completely useless in our case of study.
+ So, we used instead native functions, in particular omp_get_wtime of omp.h
+ for wall clock time and clock() of time.h for CPU time.
+ Both timers has resolutions in the order of microseconds.
+\end_layout
+
+\begin_layout Standard
+The raw data we collected is shown in the following table.
+\end_layout
+
+\begin_layout Standard
+Since the simulations were run minimizing the number of concurrent jobs,
+ wall clock time and CPU time do not differ to much.
+ Hence, from now on we will consider just the CPU time measure, indeed more
+ significant.
+\end_layout
+
+\begin_layout Standard
+To better understand the results, we plotted for each function both the
+ expected trend and the real one; moreover, to enlighten asymptotical complexity
+ we also provided log-log scale plots.
+ 
 \end_layout
 
 \begin_layout Section
