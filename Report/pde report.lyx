@@ -683,7 +683,7 @@ As we stated, the very first task that the algorithm must handle is a proper
 \end_layout
 
 \begin_layout Standard
-Disregarding the inital part that simply allocates required memory space,
+Disregarding the initial part that simply allocates required memory space,
  we notice that the initialization actually result in 
 \begin_inset Formula $n$
 \end_inset
@@ -791,7 +791,7 @@ The assembling operation is realized by calling, for each one of the
  storing them back to the global ones (the very ones initialized at the
  previous step).
  Since the computation of local element uses only values at the three vertices
- of the triangle under consideration, its complexity is independent ofrom
+ of the triangle under consideration, its complexity is independent from
  
 \begin_inset Formula $n$
 \end_inset
@@ -943,7 +943,7 @@ At this point, before starting the computation of the solution, we must
  position.
  By looking at the function, whose code implementation is shown below, we
  can easily notice that the number of operations is in the order of 
-\begin_inset Formula $n*(1+n_{boundary})$
+\begin_inset Formula $n\cdot(1+n_{boundary})$
 \end_inset
 
  where 
@@ -1067,7 +1067,7 @@ Computation of the approximate solution
 \end_layout
 
 \begin_layout Standard
-Finally, with both the matrix and the righ-hand side properly computed,
+Finally, with both the matrix and the right-hand side properly computed,
  it is possible to compute the FEM approximation of the solution 
 \begin_inset Formula $u$
 \end_inset
