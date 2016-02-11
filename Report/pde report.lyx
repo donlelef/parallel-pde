@@ -533,17 +533,16 @@ As the solution to such a problem is proved to be unique,
 \end_layout
 
 \begin_layout Section
-Serial Implementation
+Serial implementation
 \end_layout
 
 \begin_layout Standard
 We shall consider now the actual C-language implementation of the algorithm
  that does approximate the solution of the given problem with a finite elements
  approach.
- In order to focus on the interesting parts, we will disregard I/O operation
- that allow the program to obtain required parameters and print output results
- and diagnostic log messages.
- 
+ In order to focus on the interesting parts, we will disregard I/O operations
+ that are useful to the program execution but do not represent any case
+ of study.
 \end_layout
 
 \begin_layout Standard
@@ -582,7 +581,7 @@ Memory allocation and initialization for both the Stiffness matrix
 \noun default
 \color inherit
 \lang british
- and the right-hand side
+ and the right-hand side 
 \begin_inset Formula $b$
 \end_inset
 
@@ -650,7 +649,7 @@ Computation of the global Stiffness matrix
 \noun default
 \color inherit
 \lang british
- by computing and assembling local ones.
+ by computing and assembling up local ones.
 \end_layout
 
 \begin_layout Enumerate
@@ -658,15 +657,19 @@ Assignment of Dirichlet conditions.
 \end_layout
 
 \begin_layout Enumerate
-Solution of the linear system given by 
-\begin_inset Formula 
-\begin{equation}
-Wu=b
-\end{equation}
+Computation of the vector 
+\begin_inset Formula $u$
+\end_inset
 
+ solution of 
+\begin_inset Formula $Wu$
 \end_inset
 
 
+\begin_inset Formula $=b$
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
@@ -680,28 +683,6 @@ As we stated, the very first task that the algorithm must handle is a proper
  In order to improve memory usage and to uniform access, the matrix is indeed
  stored as a linear 1D vector.
  The function that implement this initialization is shown below.
-\end_layout
-
-\begin_layout Standard
-Disregarding the initial part that simply allocates required memory space,
- we notice that the initialization actually result in 
-\begin_inset Formula $n$
-\end_inset
-
- store calls, 
-\begin_inset Formula $n$
-\end_inset
-
- being the dimension of the vector.
- In our case, that lead us to 
-\begin_inset Formula $n^{2}+n$
-\end_inset
-
- store calls, with this time 
-\begin_inset Formula $n$
-\end_inset
-
- equal to the number of vertices in the given mesh.
 \end_layout
 
 \begin_layout Standard
@@ -774,35 +755,34 @@ Memory allocation and variable initialization
 
 \end_layout
 
+\begin_layout Standard
+Disregarding the initial part that simply allocates required memory space,
+ we notice that the initialization actually results in 
+\begin_inset Formula $n$
+\end_inset
+
+ store calls, 
+\begin_inset Formula $n$
+\end_inset
+
+ being the dimension of the vector.
+ In our case, that lead us to 
+\begin_inset Formula $n^{2}+n$
+\end_inset
+
+ store calls, with this time 
+\begin_inset Formula $n$
+\end_inset
+
+ equal to the number of vertices in the given mesh.
+\end_layout
+
 \begin_layout Subsection
 Assembling of the Stiffness matrix and the right-hand side
 \end_layout
 
 \begin_layout Standard
-The code under consideration is shown below
-\end_layout
-
-\begin_layout Standard
-The assembling operation is realized by calling, for each one of the 
-\begin_inset Formula $n$
-\end_inset
-
- vertices in the matrix, two functions that compute local elements and then
- storing them back to the global ones (the very ones initialized at the
- previous step).
- Since the computation of local element uses only values at the three vertices
- of the triangle under consideration, its complexity is independent from
- 
-\begin_inset Formula $n$
-\end_inset
-
-, and can thus be ignored.
- As a result, we can state that the complexity of the assembling task is
- linear ( 
-\begin_inset Formula $\sim n$
-\end_inset
-
- ) with the dimension of the mesh.
+The code under consideration is shown below.
 \end_layout
 
 \begin_layout Standard
@@ -929,6 +909,30 @@ Assembling of the Stiffness matrix and the right-hand side
 
 \end_layout
 
+\begin_layout Standard
+The assembling operation is realized by initially calling, for each one
+ of the 
+\begin_inset Formula $n$
+\end_inset
+
+ vertices in the mesh, two functions that compute local elements then summing
+ them back to the global ones (the very ones initialized at the previous
+ step).
+ Since the computation of local elements uses only values at the three vertices
+ of the local triangle, its complexity is independent from 
+\begin_inset Formula $n$
+\end_inset
+
+, and can thus be ignored.
+ As a result, we can state that the overall complexity of the assembling
+ task is 
+\begin_inset Formula $O(n)$
+\end_inset
+
+, i.e.
+ linear with respect to the dimension of the mesh.
+\end_layout
+
 \begin_layout Subsection
 Dirichlet conditions assignment
 \end_layout
@@ -940,7 +944,7 @@ At this point, before starting the computation of the solution, we must
  under consideration.
  In other words, we have to retrieve those vertices that do belong to the
  boundary of the domain and assign particular values at the correspondent
- position.
+ positions.
  By looking at the function, whose code implementation is shown below, we
  can easily notice that the number of operations is in the order of 
 \begin_inset Formula $n\cdot(1+n_{boundary})$
@@ -1067,7 +1071,7 @@ Computation of the approximate solution
 \end_layout
 
 \begin_layout Standard
-Finally, with both the matrix and the right-hand side properly computed,
+Finally, with both the matrix and the right-hand side properly assigned,
  it is possible to compute the FEM approximation of the solution 
 \begin_inset Formula $u$
 \end_inset
@@ -1086,7 +1090,7 @@ Finally, with both the matrix and the right-hand side properly computed,
  algorithm: at first, the whole system is changed with several pivot operations
  till an upper-triangular structure is reached; then, the solutions is computed
  backward.
- The cost for computing the upper triangular system is of the order of 
+ The cost for computing the upper triangular system is in the order of 
 \begin_inset Formula $\frac{n^{3}}{3}$
 \end_inset
 
@@ -1094,12 +1098,20 @@ Finally, with both the matrix and the right-hand side properly computed,
 \begin_inset Formula $n^{2}$
 \end_inset
 
- , so that the total number of operations is 
-\begin_inset Formula $\text{\sim}\frac{n^{3}}{3}+n^{2}$
+ , so that the total asymptotical complexity is 
+\begin_inset Formula $O(\frac{n^{3}}{3}$
 \end_inset
 
-.
- As we will see later, this is actually the bottleneck of the whole program.
+
+\begin_inset Formula $+n^{2}$
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Standard
+As we will see later, this is actually the bottleneck of the whole program.
 \end_layout
 
 \begin_layout Standard
@@ -1266,7 +1278,7 @@ Computation of the approximate solution
 \end_layout
 
 \begin_layout Section
-Profiling
+Profiling of the serial execution
 \end_layout
 
 \begin_layout Standard
@@ -1284,14 +1296,34 @@ on time growth with respect to different mesh dimensions.
 \end_layout
 
 \begin_layout Standard
+/table i7/
+\end_layout
+
+\begin_layout Standard
 For each function, we computed both the wall clock time, which is the actual
  amount of time taken to perform the job, and the CPU time, which is on
- the other hand the function held the CPU during its execution.
+ the other hand the amount of time the function did hold the CPU during
+ its execution.
  In order to keep the overhead as light as we could, we avoided the usage
  of professional profiling tools, which by the way usually offer sampling
  frequencies which are completely useless in our case of study.
- So, we used instead native functions, in particular omp_get_wtime of omp.h
- for wall clock time and clock() of time.h for CPU time.
+ Hence, we used instead native functions, in particular 
+\family typewriter
+omp_get_wtime
+\family default
+ of 
+\family typewriter
+omp.h
+\family default
+ for wall clock time and 
+\family typewriter
+clock()
+\family default
+ of 
+\family typewriter
+time.h
+\family default
+ for CPU time.
  Both timers has resolutions in the order of microseconds.
 \end_layout
 
@@ -1300,17 +1332,26 @@ The raw data we collected is shown in the following table.
 \end_layout
 
 \begin_layout Standard
+/table i7_serial/
+\end_layout
+
+\begin_layout Standard
 Since the simulations were run minimizing the number of concurrent jobs,
- wall clock time and CPU time do not differ to much.
- Hence, from now on we will consider just the CPU time measure, indeed more
- significant.
+ we notice that the wall clock time and CPU time do not actually differ
+ too much.
+ Hence, from now on we will consider just the CPU time measurement, indeed
+ more significant.
 \end_layout
 
 \begin_layout Standard
 To better understand the results, we plotted for each function both the
- expected trend and the real one; moreover, to enlighten asymptotical complexity
+ expected trend and the real one; moreover, to hilight asymptotical complexity,
  we also provided log-log scale plots.
  
+\end_layout
+
+\begin_layout Standard
+/graphs/
 \end_layout
 
 \begin_layout Section
@@ -1322,7 +1363,17 @@ Parallel implementation
 \end_layout
 
 \begin_layout Section
-Simulations
+Profiling of the parallel execution
+\end_layout
+
+\begin_layout Standard
+Like we did for the serial execution, we shall now proceed analyzing the
+ execution of the parallel code on computer machines.
+ The profiling operation were made in the exact same way of the serial one,
+ but simulations were run on different machines in order to study the speed-up
+ of parallel code with respect to the number of available cores.
+ All interesting parameters related to the processors under consideration
+ are listed below.
 \end_layout
 
 \begin_layout Section
