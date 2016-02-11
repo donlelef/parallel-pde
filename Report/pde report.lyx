@@ -1265,5 +1265,33 @@ Computation of the approximate solution
 
 \end_layout
 
+\begin_layout Section
+Profiling
+\end_layout
+
+\begin_layout Standard
+Analisi tempi di esecuzione del codice seriale.
+\end_layout
+
+\begin_layout Section
+Parallelization study
+\end_layout
+
+\begin_layout Section
+Parallel implementation
+\end_layout
+
+\begin_layout Section
+Simulations
+\end_layout
+
+\begin_layout Section
+Result analysis
+\end_layout
+
+\begin_layout Section
+A bit of insight
+\end_layout
+
 \end_body
 \end_document
