@@ -2382,6 +2382,26 @@ Parallelization study
 Parallel implementation
 \end_layout
 
+\begin_layout Standard
+After this 
+\end_layout
+
+\begin_layout Subsection
+Memory allocation and variable initialisation
+\end_layout
+
+\begin_layout Subsection
+Assembling of the Stiffness matrix and the right-hand side
+\end_layout
+
+\begin_layout Subsection
+Dirichlet conditions assignment
+\end_layout
+
+\begin_layout Subsection
+Computation of the approximate solution
+\end_layout
+
 \begin_layout Section
 Profiling of the parallel execution
 \end_layout
@@ -2745,7 +2765,7 @@ tion, and compare it to the theoretical behavior predicted before.
 \end_layout
 
 \begin_layout Subsection
-Memory allocation and variable initialization
+Memory allocation and variable initialisation
 \end_layout
 
 \begin_layout Subsection
