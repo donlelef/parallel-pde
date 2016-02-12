@@ -2504,7 +2504,7 @@ Computation of the approximate solution
 \begin_inset Float figure
 wide false
 sideways false
-status collapsed
+status open
 
 \begin_layout Plain Layout
 \begin_inset Graphics
@@ -2535,7 +2535,7 @@ Profiling of the parallel execution
 \end_layout
 
 \begin_layout Standard
-Like we did for the serial execution, we shall now proceed analysing the
+Like we did for the serial execution, we shall now proceed analyzing the
  execution of the parallel code on computer machines.
  The profiling operations were made in the exact same way of the serial
  one, but simulations were run on different machines in order to study the
@@ -2885,7 +2885,7 @@ The raw data we collected, for each machine, is shown below.
 
 \begin_layout Standard
 We shall now consider function by function the effect of the applied paralleliza
-tion, and compare it to the theoretical behaviour predicted before.
+tion, and compare it to the theoretical behavior predicted before.
  For each one of the kernel functions, we plotted different trend of computation
  times when the code is run serial (as in the previous analysis) or in parallel
  on different machines (and therefore with a different number of available
