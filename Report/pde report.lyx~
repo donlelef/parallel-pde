@@ -1096,14 +1096,10 @@ Finally, with both the matrix and the right-hand side properly assigned,
 \end_inset
 
  , so that the total asymptotically complexity is 
-\begin_inset Formula $O(\frac{n^{3}}{3}$
+\begin_inset Formula $O\left(\frac{n^{3}}{3}+n^{2}\right)$
 \end_inset
 
-
-\begin_inset Formula $+n^{2}$
-\end_inset
-
-).
+.
  
 \end_layout
 
@@ -1498,10 +1494,6 @@ L3 cache
 </row>
 </lyxtabular>
 
-\end_inset
-
-
-\begin_inset Newline newline
 \end_inset
 
 
@@ -2423,7 +2415,7 @@ Profiling of the parallel execution
 \end_layout
 
 \begin_layout Standard
-Like we did for the serial execution, we shall now proceed analyzing the
+Like we did for the serial execution, we shall now proceed analysing the
  execution of the parallel code on computer machines.
  The profiling operation were made in the exact same way of the serial one,
  but simulations were run on different machines in order to study the speed-up
