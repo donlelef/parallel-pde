@@ -246,7 +246,7 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 	/* Gaussian Elimination: START */
 	double startGauss = omp_get_wtime();
 	clock_t startGaussCPU = clock();
-	gaussianElimination(meshSize, w, b);
+	// gaussianElimination(meshSize, w, b);
 	double gaussTime = omp_get_wtime() - startGauss;
 	double gaussTimeCPU = ((double) (clock() - startGaussCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
 	/* Gaussian Elimination: END */

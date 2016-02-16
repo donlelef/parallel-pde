@@ -1,0 +1,162 @@
+Parallel option enabled...
+Running with 4 threads...
+Iteration 0
+Vertex number: 25.
+Elapsed time for computation: 0.000056 seconds.
+Elapsed time for computation in CPU: 0.000056 seconds.
+Elapsed time for IO: 0.000166 seconds.
+Elapsed time for IO in CPU: 0.000034 seconds.
+Elapsed time for zeros: 0.003960 seconds.
+Elapsed time for zeros in CPU: 0.002919 seconds.
+Elapsed time for assembling: 0.000041 seconds.
+Elapsed time for assembling in CPU: 0.000041 seconds.
+Elapsed time for dirichlet: 0.000004 seconds.
+Elapsed time for dirichlet in CPU: 0.000005 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.000007 seconds.
+Elapsed time for back substitution in CPU: 0.000006 seconds.
+Iteration 1
+Vertex number: 33.
+Elapsed time for computation: 0.000029 seconds.
+Elapsed time for computation in CPU: 0.000029 seconds.
+Elapsed time for IO: 0.000071 seconds.
+Elapsed time for IO in CPU: 0.000071 seconds.
+Elapsed time for zeros: 0.000012 seconds.
+Elapsed time for zeros in CPU: 0.000013 seconds.
+Elapsed time for assembling: 0.000014 seconds.
+Elapsed time for assembling in CPU: 0.000014 seconds.
+Elapsed time for dirichlet: 0.000004 seconds.
+Elapsed time for dirichlet in CPU: 0.000004 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.000008 seconds.
+Elapsed time for back substitution in CPU: 0.000008 seconds.
+Iteration 2
+Vertex number: 41.
+Elapsed time for computation: 0.000035 seconds.
+Elapsed time for computation in CPU: 0.000035 seconds.
+Elapsed time for IO: 0.000089 seconds.
+Elapsed time for IO in CPU: 0.000088 seconds.
+Elapsed time for zeros: 0.000006 seconds.
+Elapsed time for zeros in CPU: 0.000006 seconds.
+Elapsed time for assembling: 0.000017 seconds.
+Elapsed time for assembling in CPU: 0.000017 seconds.
+Elapsed time for dirichlet: 0.000005 seconds.
+Elapsed time for dirichlet in CPU: 0.000005 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.000010 seconds.
+Elapsed time for back substitution in CPU: 0.000010 seconds.
+Iteration 3
+Vertex number: 75.
+Elapsed time for computation: 0.000068 seconds.
+Elapsed time for computation in CPU: 0.000068 seconds.
+Elapsed time for IO: 0.000160 seconds.
+Elapsed time for IO in CPU: 0.000160 seconds.
+Elapsed time for zeros: 0.000019 seconds.
+Elapsed time for zeros in CPU: 0.000019 seconds.
+Elapsed time for assembling: 0.000031 seconds.
+Elapsed time for assembling in CPU: 0.000031 seconds.
+Elapsed time for dirichlet: 0.000009 seconds.
+Elapsed time for dirichlet in CPU: 0.000009 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000000 seconds.
+Elapsed time for back substitution: 0.000025 seconds.
+Elapsed time for back substitution in CPU: 0.000025 seconds.
+Iteration 4
+Vertex number: 144.
+Elapsed time for computation: 0.000163 seconds.
+Elapsed time for computation in CPU: 0.000163 seconds.
+Elapsed time for IO: 0.000314 seconds.
+Elapsed time for IO in CPU: 0.000314 seconds.
+Elapsed time for zeros: 0.000054 seconds.
+Elapsed time for zeros in CPU: 0.000055 seconds.
+Elapsed time for assembling: 0.000061 seconds.
+Elapsed time for assembling in CPU: 0.000061 seconds.
+Elapsed time for dirichlet: 0.000017 seconds.
+Elapsed time for dirichlet in CPU: 0.000017 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.000081 seconds.
+Elapsed time for back substitution in CPU: 0.000082 seconds.
+Iteration 5
+Vertex number: 544.
+Elapsed time for computation: 0.001461 seconds.
+Elapsed time for computation in CPU: 0.001462 seconds.
+Elapsed time for IO: 0.001022 seconds.
+Elapsed time for IO in CPU: 0.000255 seconds.
+Elapsed time for zeros: 0.002073 seconds.
+Elapsed time for zeros in CPU: 0.001601 seconds.
+Elapsed time for assembling: 0.000256 seconds.
+Elapsed time for assembling in CPU: 0.000257 seconds.
+Elapsed time for dirichlet: 0.000105 seconds.
+Elapsed time for dirichlet in CPU: 0.000106 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.001094 seconds.
+Elapsed time for back substitution in CPU: 0.001096 seconds.
+Iteration 6
+Vertex number: 2173.
+Elapsed time for computation: 0.017490 seconds.
+Elapsed time for computation in CPU: 0.007566 seconds.
+Elapsed time for IO: 0.005294 seconds.
+Elapsed time for IO in CPU: 0.001316 seconds.
+Elapsed time for zeros: 0.013671 seconds.
+Elapsed time for zeros in CPU: 0.013454 seconds.
+Elapsed time for assembling: 0.001226 seconds.
+Elapsed time for assembling in CPU: 0.001227 seconds.
+Elapsed time for dirichlet: 0.000823 seconds.
+Elapsed time for dirichlet in CPU: 0.000825 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.015430 seconds.
+Elapsed time for back substitution in CPU: 0.005510 seconds.
+Iteration 7
+Vertex number: 3447.
+Elapsed time for computation: 0.041995 seconds.
+Elapsed time for computation in CPU: 0.014865 seconds.
+Elapsed time for IO: 0.005892 seconds.
+Elapsed time for IO in CPU: 0.001471 seconds.
+Elapsed time for zeros: 0.032876 seconds.
+Elapsed time for zeros in CPU: 0.032501 seconds.
+Elapsed time for assembling: 0.002023 seconds.
+Elapsed time for assembling in CPU: 0.002010 seconds.
+Elapsed time for dirichlet: 0.001581 seconds.
+Elapsed time for dirichlet in CPU: 0.001585 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000000 seconds.
+Elapsed time for back substitution: 0.038375 seconds.
+Elapsed time for back substitution in CPU: 0.011264 seconds.
+Iteration 8
+Vertex number: 6084.
+Elapsed time for computation: 0.124544 seconds.
+Elapsed time for computation in CPU: 0.038321 seconds.
+Elapsed time for IO: 0.014853 seconds.
+Elapsed time for IO in CPU: 0.003708 seconds.
+Elapsed time for zeros: 0.104017 seconds.
+Elapsed time for zeros in CPU: 0.101918 seconds.
+Elapsed time for assembling: 0.003695 seconds.
+Elapsed time for assembling in CPU: 0.003701 seconds.
+Elapsed time for dirichlet: 0.003718 seconds.
+Elapsed time for dirichlet in CPU: 0.003677 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.117112 seconds.
+Elapsed time for back substitution in CPU: 0.030936 seconds.
+Iteration 9
+Vertex number: 13693.
+Elapsed time for computation: 0.613486 seconds.
+Elapsed time for computation in CPU: 0.172294 seconds.
+Elapsed time for IO: 0.027240 seconds.
+Elapsed time for IO in CPU: 0.006806 seconds.
+Elapsed time for zeros: 0.654048 seconds.
+Elapsed time for zeros in CPU: 0.557425 seconds.
+Elapsed time for assembling: 0.011628 seconds.
+Elapsed time for assembling in CPU: 0.011567 seconds.
+Elapsed time for dirichlet: 0.012798 seconds.
+Elapsed time for dirichlet in CPU: 0.011888 seconds.
+Elapsed time for gaussian elimination: 0.000001 seconds.
+Elapsed time for gaussian elimination in CPU: 0.000001 seconds.
+Elapsed time for back substitution: 0.589040 seconds.
+Elapsed time for back substitution in CPU: 0.148832 seconds.

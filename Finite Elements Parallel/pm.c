@@ -222,11 +222,11 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 
 		for (i = 0; i < 3; i++) {
 			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
-#pragma omp critical
+// #pragma omp critical
 			b[globalVertex] += localB[i];
 			for (j = 0; j < 3; j++) {
 				globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1;
-#pragma omp critical
+// #pragma omp critical
 				*(w + globalVertex * meshSize + globalVertex2) += localW[i][j];
 			}
 		}
@@ -246,7 +246,7 @@ double* solvePDE(char fileP[], char fileT[], FILE* result) {
 	/* Gaussian Elimination: START */
 	double startGauss = omp_get_wtime();
 	clock_t startGaussCPU = clock();
-	gaussianElimination(meshSize, w, b);
+	// gaussianElimination(meshSize, w, b);
 	double gaussTime = omp_get_wtime() - startGauss;
 	double gaussTimeCPU = ((double) (clock() - startGaussCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
 	/* Gaussian Elimination: END */

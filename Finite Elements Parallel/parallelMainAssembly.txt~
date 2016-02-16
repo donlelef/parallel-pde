@@ -1,0 +1,2123 @@
+
+parallelMain.o:     formato del file elf64-x86-64
+
+
+Disassemblamento della sezione .text:
+
+0000000000000000 <printMatrix>:
+#include <time.h>
+#include <omp.h>
+
+#define TOL 10e-3
+
+void printMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+       0:	55                   	push   rbp
+       1:	48 89 e5             	mov    rbp,rsp
+       4:	48 83 ec 30          	sub    rsp,0x30
+       8:	48 89 7d e8          	mov    QWORD PTR [rbp-0x18],rdi
+       c:	89 75 e4             	mov    DWORD PTR [rbp-0x1c],esi
+       f:	89 55 e0             	mov    DWORD PTR [rbp-0x20],edx
+      12:	48 89 4d d8          	mov    QWORD PTR [rbp-0x28],rcx
+	int i = 0, j = 0;
+      16:	c7 45 f8 00 00 00 00 	mov    DWORD PTR [rbp-0x8],0x0
+      1d:	c7 45 fc 00 00 00 00 	mov    DWORD PTR [rbp-0x4],0x0
+	for (i = 0; i < xDim; i++) {
+      24:	c7 45 f8 00 00 00 00 	mov    DWORD PTR [rbp-0x8],0x0
+      2b:	eb 6d                	jmp    9a <printMatrix+0x9a>
+		for (j = 0; j < yDim; j++) {
+      2d:	c7 45 fc 00 00 00 00 	mov    DWORD PTR [rbp-0x4],0x0
+      34:	eb 47                	jmp    7d <printMatrix+0x7d>
+			fprintf(fout, "%lf ", *(matrix + i * yDim + j));
+      36:	8b 45 f8             	mov    eax,DWORD PTR [rbp-0x8]
+      39:	0f af 45 e0          	imul   eax,DWORD PTR [rbp-0x20]
+      3d:	48 63 d0             	movsxd rdx,eax
+      40:	8b 45 fc             	mov    eax,DWORD PTR [rbp-0x4]
+      43:	48 98                	cdqe   
+      45:	48 01 d0             	add    rax,rdx
+      48:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+      4f:	00 
+      50:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+      54:	48 01 d0             	add    rax,rdx
+      57:	48 8b 00             	mov    rax,QWORD PTR [rax]
+      5a:	48 8b 55 d8          	mov    rdx,QWORD PTR [rbp-0x28]
+      5e:	48 89 45 d0          	mov    QWORD PTR [rbp-0x30],rax
+      62:	f2 0f 10 45 d0       	movsd  xmm0,QWORD PTR [rbp-0x30]
+      67:	be 00 00 00 00       	mov    esi,0x0
+      6c:	48 89 d7             	mov    rdi,rdx
+      6f:	b8 01 00 00 00       	mov    eax,0x1
+      74:	e8 00 00 00 00       	call   79 <printMatrix+0x79>
+#define TOL 10e-3
+
+void printMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+	int i = 0, j = 0;
+	for (i = 0; i < xDim; i++) {
+		for (j = 0; j < yDim; j++) {
+      79:	83 45 fc 01          	add    DWORD PTR [rbp-0x4],0x1
+      7d:	8b 45 fc             	mov    eax,DWORD PTR [rbp-0x4]
+      80:	3b 45 e0             	cmp    eax,DWORD PTR [rbp-0x20]
+      83:	7c b1                	jl     36 <printMatrix+0x36>
+			fprintf(fout, "%lf ", *(matrix + i * yDim + j));
+		}
+		fprintf(fout, "\n");
+      85:	48 8b 45 d8          	mov    rax,QWORD PTR [rbp-0x28]
+      89:	48 89 c6             	mov    rsi,rax
+      8c:	bf 0a 00 00 00       	mov    edi,0xa
+      91:	e8 00 00 00 00       	call   96 <printMatrix+0x96>
+
+#define TOL 10e-3
+
+void printMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+	int i = 0, j = 0;
+	for (i = 0; i < xDim; i++) {
+      96:	83 45 f8 01          	add    DWORD PTR [rbp-0x8],0x1
+      9a:	8b 45 f8             	mov    eax,DWORD PTR [rbp-0x8]
+      9d:	3b 45 e4             	cmp    eax,DWORD PTR [rbp-0x1c]
+      a0:	7c 8b                	jl     2d <printMatrix+0x2d>
+		for (j = 0; j < yDim; j++) {
+			fprintf(fout, "%lf ", *(matrix + i * yDim + j));
+		}
+		fprintf(fout, "\n");
+	}
+	fclose(fout);
+      a2:	48 8b 45 d8          	mov    rax,QWORD PTR [rbp-0x28]
+      a6:	48 89 c7             	mov    rdi,rax
+      a9:	e8 00 00 00 00       	call   ae <printMatrix+0xae>
+}
+      ae:	c9                   	leave  
+      af:	c3                   	ret    
+
+00000000000000b0 <printSparseMatrix>:
+
+void printSparseMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+      b0:	55                   	push   rbp
+      b1:	48 89 e5             	mov    rbp,rsp
+      b4:	48 83 ec 30          	sub    rsp,0x30
+      b8:	48 89 7d e8          	mov    QWORD PTR [rbp-0x18],rdi
+      bc:	89 75 e4             	mov    DWORD PTR [rbp-0x1c],esi
+      bf:	89 55 e0             	mov    DWORD PTR [rbp-0x20],edx
+      c2:	48 89 4d d8          	mov    QWORD PTR [rbp-0x28],rcx
+	int i = 0, j = 0;
+      c6:	c7 45 f0 00 00 00 00 	mov    DWORD PTR [rbp-0x10],0x0
+      cd:	c7 45 f4 00 00 00 00 	mov    DWORD PTR [rbp-0xc],0x0
+	for (i = 0; i < xDim; i++) {
+      d4:	c7 45 f0 00 00 00 00 	mov    DWORD PTR [rbp-0x10],0x0
+      db:	e9 a4 00 00 00       	jmp    184 <printSparseMatrix+0xd4>
+		for (j = 0; j < yDim; j++) {
+      e0:	c7 45 f4 00 00 00 00 	mov    DWORD PTR [rbp-0xc],0x0
+      e7:	e9 88 00 00 00       	jmp    174 <printSparseMatrix+0xc4>
+			double element = *(matrix + i * yDim + j);
+      ec:	8b 45 f0             	mov    eax,DWORD PTR [rbp-0x10]
+      ef:	0f af 45 e0          	imul   eax,DWORD PTR [rbp-0x20]
+      f3:	48 63 d0             	movsxd rdx,eax
+      f6:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+      f9:	48 98                	cdqe   
+      fb:	48 01 d0             	add    rax,rdx
+      fe:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     105:	00 
+     106:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     10a:	48 01 d0             	add    rax,rdx
+     10d:	48 8b 00             	mov    rax,QWORD PTR [rax]
+     110:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+			if (element != 0.0) {
+     114:	66 0f 57 c0          	xorpd  xmm0,xmm0
+     118:	66 0f 2e 45 f8       	ucomisd xmm0,QWORD PTR [rbp-0x8]
+     11d:	7a 0b                	jp     12a <printSparseMatrix+0x7a>
+     11f:	66 0f 57 c0          	xorpd  xmm0,xmm0
+     123:	66 0f 2e 45 f8       	ucomisd xmm0,QWORD PTR [rbp-0x8]
+     128:	74 46                	je     170 <printSparseMatrix+0xc0>
+				fprintf(fout, "(%d %d) %lf\n", i, j, *(matrix + i * yDim + j));
+     12a:	8b 45 f0             	mov    eax,DWORD PTR [rbp-0x10]
+     12d:	0f af 45 e0          	imul   eax,DWORD PTR [rbp-0x20]
+     131:	48 63 d0             	movsxd rdx,eax
+     134:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     137:	48 98                	cdqe   
+     139:	48 01 d0             	add    rax,rdx
+     13c:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     143:	00 
+     144:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     148:	48 01 d0             	add    rax,rdx
+     14b:	48 8b 00             	mov    rax,QWORD PTR [rax]
+     14e:	8b 4d f4             	mov    ecx,DWORD PTR [rbp-0xc]
+     151:	8b 55 f0             	mov    edx,DWORD PTR [rbp-0x10]
+     154:	48 8b 7d d8          	mov    rdi,QWORD PTR [rbp-0x28]
+     158:	48 89 45 d0          	mov    QWORD PTR [rbp-0x30],rax
+     15c:	f2 0f 10 45 d0       	movsd  xmm0,QWORD PTR [rbp-0x30]
+     161:	be 00 00 00 00       	mov    esi,0x0
+     166:	b8 01 00 00 00       	mov    eax,0x1
+     16b:	e8 00 00 00 00       	call   170 <printSparseMatrix+0xc0>
+}
+
+void printSparseMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+	int i = 0, j = 0;
+	for (i = 0; i < xDim; i++) {
+		for (j = 0; j < yDim; j++) {
+     170:	83 45 f4 01          	add    DWORD PTR [rbp-0xc],0x1
+     174:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     177:	3b 45 e0             	cmp    eax,DWORD PTR [rbp-0x20]
+     17a:	0f 8c 6c ff ff ff    	jl     ec <printSparseMatrix+0x3c>
+	fclose(fout);
+}
+
+void printSparseMatrix(double *matrix, int xDim, int yDim, FILE* fout) {
+	int i = 0, j = 0;
+	for (i = 0; i < xDim; i++) {
+     180:	83 45 f0 01          	add    DWORD PTR [rbp-0x10],0x1
+     184:	8b 45 f0             	mov    eax,DWORD PTR [rbp-0x10]
+     187:	3b 45 e4             	cmp    eax,DWORD PTR [rbp-0x1c]
+     18a:	0f 8c 50 ff ff ff    	jl     e0 <printSparseMatrix+0x30>
+			if (element != 0.0) {
+				fprintf(fout, "(%d %d) %lf\n", i, j, *(matrix + i * yDim + j));
+			}
+		}
+	}
+	fclose(fout);
+     190:	48 8b 45 d8          	mov    rax,QWORD PTR [rbp-0x28]
+     194:	48 89 c7             	mov    rdi,rax
+     197:	e8 00 00 00 00       	call   19c <printSparseMatrix+0xec>
+}
+     19c:	c9                   	leave  
+     19d:	c3                   	ret    
+
+000000000000019e <triangleArea>:
+
+double triangleArea(double vertices[][2]) {
+     19e:	55                   	push   rbp
+     19f:	48 89 e5             	mov    rbp,rsp
+     1a2:	48 89 7d e8          	mov    QWORD PTR [rbp-0x18],rdi
+	double area = 0;
+     1a6:	b8 00 00 00 00       	mov    eax,0x0
+     1ab:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+	area = 0.5
+			* ((vertices[1][0] - vertices[0][0])
+     1af:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     1b3:	48 83 c0 10          	add    rax,0x10
+     1b7:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     1bb:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     1bf:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     1c3:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     1c7:	66 0f 28 c8          	movapd xmm1,xmm0
+					* (vertices[2][1] - vertices[0][1])
+     1cb:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     1cf:	48 83 c0 20          	add    rax,0x20
+     1d3:	f2 0f 10 40 08       	movsd  xmm0,QWORD PTR [rax+0x8]
+     1d8:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     1dc:	f2 0f 10 50 08       	movsd  xmm2,QWORD PTR [rax+0x8]
+     1e1:	f2 0f 5c c2          	subsd  xmm0,xmm2
+     1e5:	f2 0f 59 c1          	mulsd  xmm0,xmm1
+					- (vertices[2][0] - vertices[0][0])
+     1e9:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     1ed:	48 83 c0 20          	add    rax,0x20
+     1f1:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     1f5:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     1f9:	f2 0f 10 10          	movsd  xmm2,QWORD PTR [rax]
+     1fd:	f2 0f 5c ca          	subsd  xmm1,xmm2
+     201:	66 0f 28 d1          	movapd xmm2,xmm1
+							* (vertices[1][1] - vertices[0][1]));
+     205:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     209:	48 83 c0 10          	add    rax,0x10
+     20d:	f2 0f 10 48 08       	movsd  xmm1,QWORD PTR [rax+0x8]
+     212:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     216:	f2 0f 10 58 08       	movsd  xmm3,QWORD PTR [rax+0x8]
+     21b:	f2 0f 5c cb          	subsd  xmm1,xmm3
+     21f:	f2 0f 59 ca          	mulsd  xmm1,xmm2
+double triangleArea(double vertices[][2]) {
+	double area = 0;
+	area = 0.5
+			* ((vertices[1][0] - vertices[0][0])
+					* (vertices[2][1] - vertices[0][1])
+					- (vertices[2][0] - vertices[0][0])
+     223:	f2 0f 5c c1          	subsd  xmm0,xmm1
+	fclose(fout);
+}
+
+double triangleArea(double vertices[][2]) {
+	double area = 0;
+	area = 0.5
+     227:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # 22f <triangleArea+0x91>
+     22e:	00 
+     22f:	f2 0f 59 c1          	mulsd  xmm0,xmm1
+     233:	f2 0f 11 45 f8       	movsd  QWORD PTR [rbp-0x8],xmm0
+			* ((vertices[1][0] - vertices[0][0])
+					* (vertices[2][1] - vertices[0][1])
+					- (vertices[2][0] - vertices[0][0])
+							* (vertices[1][1] - vertices[0][1]));
+	area = fabs(area);
+     238:	f2 0f 10 4d f8       	movsd  xmm1,QWORD PTR [rbp-0x8]
+     23d:	f2 0f 10 05 00 00 00 	movsd  xmm0,QWORD PTR [rip+0x0]        # 245 <triangleArea+0xa7>
+     244:	00 
+     245:	66 0f 54 c1          	andpd  xmm0,xmm1
+     249:	f2 0f 11 45 f8       	movsd  QWORD PTR [rbp-0x8],xmm0
+	return area;
+     24e:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+}
+     252:	48 89 45 e0          	mov    QWORD PTR [rbp-0x20],rax
+     256:	f2 0f 10 45 e0       	movsd  xmm0,QWORD PTR [rbp-0x20]
+     25b:	5d                   	pop    rbp
+     25c:	c3                   	ret    
+
+000000000000025d <localVector>:
+
+void localVector(double vertices[][2], double f, double localB[]) {
+     25d:	55                   	push   rbp
+     25e:	48 89 e5             	mov    rbp,rsp
+     261:	48 83 ec 30          	sub    rsp,0x30
+     265:	48 89 7d e8          	mov    QWORD PTR [rbp-0x18],rdi
+     269:	f2 0f 11 45 e0       	movsd  QWORD PTR [rbp-0x20],xmm0
+     26e:	48 89 75 d8          	mov    QWORD PTR [rbp-0x28],rsi
+	int i;
+	double area = triangleArea(vertices);
+     272:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     276:	48 89 c7             	mov    rdi,rax
+     279:	e8 00 00 00 00       	call   27e <localVector+0x21>
+     27e:	f2 0f 11 45 d0       	movsd  QWORD PTR [rbp-0x30],xmm0
+     283:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     287:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+	for (i = 0; i < 3; i++) {
+     28b:	c7 45 f4 00 00 00 00 	mov    DWORD PTR [rbp-0xc],0x0
+     292:	eb 32                	jmp    2c6 <localVector+0x69>
+		localB[i] = (1.0 / 3) * area * f;
+     294:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     297:	48 98                	cdqe   
+     299:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     2a0:	00 
+     2a1:	48 8b 45 d8          	mov    rax,QWORD PTR [rbp-0x28]
+     2a5:	48 01 d0             	add    rax,rdx
+     2a8:	f2 0f 10 4d f8       	movsd  xmm1,QWORD PTR [rbp-0x8]
+     2ad:	f2 0f 10 05 00 00 00 	movsd  xmm0,QWORD PTR [rip+0x0]        # 2b5 <localVector+0x58>
+     2b4:	00 
+     2b5:	f2 0f 59 c1          	mulsd  xmm0,xmm1
+     2b9:	f2 0f 59 45 e0       	mulsd  xmm0,QWORD PTR [rbp-0x20]
+     2be:	f2 0f 11 00          	movsd  QWORD PTR [rax],xmm0
+}
+
+void localVector(double vertices[][2], double f, double localB[]) {
+	int i;
+	double area = triangleArea(vertices);
+	for (i = 0; i < 3; i++) {
+     2c2:	83 45 f4 01          	add    DWORD PTR [rbp-0xc],0x1
+     2c6:	83 7d f4 02          	cmp    DWORD PTR [rbp-0xc],0x2
+     2ca:	7e c8                	jle    294 <localVector+0x37>
+		localB[i] = (1.0 / 3) * area * f;
+	}
+}
+     2cc:	c9                   	leave  
+     2cd:	c3                   	ret    
+
+00000000000002ce <scalarProduct>:
+
+double scalarProduct(double x[], double y[], int length) {
+     2ce:	55                   	push   rbp
+     2cf:	48 89 e5             	mov    rbp,rsp
+     2d2:	48 89 7d e8          	mov    QWORD PTR [rbp-0x18],rdi
+     2d6:	48 89 75 e0          	mov    QWORD PTR [rbp-0x20],rsi
+     2da:	89 55 dc             	mov    DWORD PTR [rbp-0x24],edx
+	int i = 0;
+     2dd:	c7 45 f4 00 00 00 00 	mov    DWORD PTR [rbp-0xc],0x0
+	double res = 0;
+     2e4:	b8 00 00 00 00       	mov    eax,0x0
+     2e9:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+	for (i = 0; i < length; i++) {
+     2ed:	c7 45 f4 00 00 00 00 	mov    DWORD PTR [rbp-0xc],0x0
+     2f4:	eb 46                	jmp    33c <scalarProduct+0x6e>
+		res += x[i] * y[i];
+     2f6:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     2f9:	48 98                	cdqe   
+     2fb:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     302:	00 
+     303:	48 8b 45 e8          	mov    rax,QWORD PTR [rbp-0x18]
+     307:	48 01 d0             	add    rax,rdx
+     30a:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     30e:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     311:	48 98                	cdqe   
+     313:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     31a:	00 
+     31b:	48 8b 45 e0          	mov    rax,QWORD PTR [rbp-0x20]
+     31f:	48 01 d0             	add    rax,rdx
+     322:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     326:	f2 0f 59 c1          	mulsd  xmm0,xmm1
+     32a:	f2 0f 10 4d f8       	movsd  xmm1,QWORD PTR [rbp-0x8]
+     32f:	f2 0f 58 c1          	addsd  xmm0,xmm1
+     333:	f2 0f 11 45 f8       	movsd  QWORD PTR [rbp-0x8],xmm0
+}
+
+double scalarProduct(double x[], double y[], int length) {
+	int i = 0;
+	double res = 0;
+	for (i = 0; i < length; i++) {
+     338:	83 45 f4 01          	add    DWORD PTR [rbp-0xc],0x1
+     33c:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     33f:	3b 45 dc             	cmp    eax,DWORD PTR [rbp-0x24]
+     342:	7c b2                	jl     2f6 <scalarProduct+0x28>
+		res += x[i] * y[i];
+	}
+	return res;
+     344:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+}
+     348:	48 89 45 d0          	mov    QWORD PTR [rbp-0x30],rax
+     34c:	f2 0f 10 45 d0       	movsd  xmm0,QWORD PTR [rbp-0x30]
+     351:	5d                   	pop    rbp
+     352:	c3                   	ret    
+
+0000000000000353 <localStiffnessMatrix>:
+
+void localStiffnessMatrix(double vertices[][2], double localW[][3]) {
+     353:	55                   	push   rbp
+     354:	48 89 e5             	mov    rbp,rsp
+     357:	53                   	push   rbx
+     358:	48 83 ec 58          	sub    rsp,0x58
+     35c:	48 89 7d b0          	mov    QWORD PTR [rbp-0x50],rdi
+     360:	48 89 75 a8          	mov    QWORD PTR [rbp-0x58],rsi
+	int i = 0, j = 0;
+     364:	c7 45 b8 00 00 00 00 	mov    DWORD PTR [rbp-0x48],0x0
+     36b:	c7 45 bc 00 00 00 00 	mov    DWORD PTR [rbp-0x44],0x0
+	double edges[3][2];
+
+	edges[0][0] = vertices[2][0] - vertices[1][0];
+     372:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     376:	48 83 c0 20          	add    rax,0x20
+     37a:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     37e:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     382:	48 83 c0 10          	add    rax,0x10
+     386:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     38a:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     38e:	f2 0f 11 45 c8       	movsd  QWORD PTR [rbp-0x38],xmm0
+	edges[0][1] = vertices[2][1] - vertices[1][1];
+     393:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     397:	48 83 c0 20          	add    rax,0x20
+     39b:	f2 0f 10 40 08       	movsd  xmm0,QWORD PTR [rax+0x8]
+     3a0:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     3a4:	48 83 c0 10          	add    rax,0x10
+     3a8:	f2 0f 10 48 08       	movsd  xmm1,QWORD PTR [rax+0x8]
+     3ad:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     3b1:	f2 0f 11 45 d0       	movsd  QWORD PTR [rbp-0x30],xmm0
+	edges[1][0] = vertices[0][0] - vertices[2][0];
+     3b6:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     3ba:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     3be:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     3c2:	48 83 c0 20          	add    rax,0x20
+     3c6:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     3ca:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     3ce:	f2 0f 11 45 d8       	movsd  QWORD PTR [rbp-0x28],xmm0
+	edges[1][1] = vertices[0][1] - vertices[2][1];
+     3d3:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     3d7:	f2 0f 10 40 08       	movsd  xmm0,QWORD PTR [rax+0x8]
+     3dc:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     3e0:	48 83 c0 20          	add    rax,0x20
+     3e4:	f2 0f 10 48 08       	movsd  xmm1,QWORD PTR [rax+0x8]
+     3e9:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     3ed:	f2 0f 11 45 e0       	movsd  QWORD PTR [rbp-0x20],xmm0
+	edges[2][0] = vertices[1][0] - vertices[0][0];
+     3f2:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     3f6:	48 83 c0 10          	add    rax,0x10
+     3fa:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     3fe:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     402:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     406:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     40a:	f2 0f 11 45 e8       	movsd  QWORD PTR [rbp-0x18],xmm0
+	edges[2][1] = vertices[1][1] - vertices[0][1];
+     40f:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     413:	48 83 c0 10          	add    rax,0x10
+     417:	f2 0f 10 40 08       	movsd  xmm0,QWORD PTR [rax+0x8]
+     41c:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     420:	f2 0f 10 48 08       	movsd  xmm1,QWORD PTR [rax+0x8]
+     425:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     429:	f2 0f 11 45 f0       	movsd  QWORD PTR [rbp-0x10],xmm0
+
+	double area = triangleArea(vertices);
+     42e:	48 8b 45 b0          	mov    rax,QWORD PTR [rbp-0x50]
+     432:	48 89 c7             	mov    rdi,rax
+     435:	e8 00 00 00 00       	call   43a <localStiffnessMatrix+0xe7>
+     43a:	f2 0f 11 45 a0       	movsd  QWORD PTR [rbp-0x60],xmm0
+     43f:	48 8b 45 a0          	mov    rax,QWORD PTR [rbp-0x60]
+     443:	48 89 45 c0          	mov    QWORD PTR [rbp-0x40],rax
+
+	for (i = 0; i < 3; i++) {
+     447:	c7 45 b8 00 00 00 00 	mov    DWORD PTR [rbp-0x48],0x0
+     44e:	e9 a0 00 00 00       	jmp    4f3 <localStiffnessMatrix+0x1a0>
+		for (j = 0; j < 3; j++) {
+     453:	c7 45 bc 00 00 00 00 	mov    DWORD PTR [rbp-0x44],0x0
+     45a:	e9 86 00 00 00       	jmp    4e5 <localStiffnessMatrix+0x192>
+			localW[i][j] = 1 / (4 * area)
+     45f:	8b 45 b8             	mov    eax,DWORD PTR [rbp-0x48]
+     462:	48 63 d0             	movsxd rdx,eax
+     465:	48 89 d0             	mov    rax,rdx
+     468:	48 01 c0             	add    rax,rax
+     46b:	48 01 d0             	add    rax,rdx
+     46e:	48 c1 e0 03          	shl    rax,0x3
+     472:	48 89 c2             	mov    rdx,rax
+     475:	48 8b 45 a8          	mov    rax,QWORD PTR [rbp-0x58]
+     479:	48 8d 1c 02          	lea    rbx,[rdx+rax*1]
+     47d:	f2 0f 10 4d c0       	movsd  xmm1,QWORD PTR [rbp-0x40]
+     482:	f2 0f 10 05 00 00 00 	movsd  xmm0,QWORD PTR [rip+0x0]        # 48a <localStiffnessMatrix+0x137>
+     489:	00 
+     48a:	f2 0f 59 c1          	mulsd  xmm0,xmm1
+     48e:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # 496 <localStiffnessMatrix+0x143>
+     495:	00 
+     496:	f2 0f 5e c8          	divsd  xmm1,xmm0
+     49a:	f2 0f 11 4d a0       	movsd  QWORD PTR [rbp-0x60],xmm1
+					* scalarProduct(edges[i], edges[j], 2);
+     49f:	48 8d 45 c8          	lea    rax,[rbp-0x38]
+     4a3:	8b 55 bc             	mov    edx,DWORD PTR [rbp-0x44]
+     4a6:	48 63 d2             	movsxd rdx,edx
+     4a9:	48 c1 e2 04          	shl    rdx,0x4
+     4ad:	48 8d 0c 10          	lea    rcx,[rax+rdx*1]
+     4b1:	48 8d 45 c8          	lea    rax,[rbp-0x38]
+     4b5:	8b 55 b8             	mov    edx,DWORD PTR [rbp-0x48]
+     4b8:	48 63 d2             	movsxd rdx,edx
+     4bb:	48 c1 e2 04          	shl    rdx,0x4
+     4bf:	48 01 d0             	add    rax,rdx
+     4c2:	ba 02 00 00 00       	mov    edx,0x2
+     4c7:	48 89 ce             	mov    rsi,rcx
+     4ca:	48 89 c7             	mov    rdi,rax
+     4cd:	e8 00 00 00 00       	call   4d2 <localStiffnessMatrix+0x17f>
+     4d2:	f2 0f 59 45 a0       	mulsd  xmm0,QWORD PTR [rbp-0x60]
+
+	double area = triangleArea(vertices);
+
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {
+			localW[i][j] = 1 / (4 * area)
+     4d7:	8b 45 bc             	mov    eax,DWORD PTR [rbp-0x44]
+     4da:	48 98                	cdqe   
+     4dc:	f2 0f 11 04 c3       	movsd  QWORD PTR [rbx+rax*8],xmm0
+	edges[2][1] = vertices[1][1] - vertices[0][1];
+
+	double area = triangleArea(vertices);
+
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {
+     4e1:	83 45 bc 01          	add    DWORD PTR [rbp-0x44],0x1
+     4e5:	83 7d bc 02          	cmp    DWORD PTR [rbp-0x44],0x2
+     4e9:	0f 8e 70 ff ff ff    	jle    45f <localStiffnessMatrix+0x10c>
+	edges[2][0] = vertices[1][0] - vertices[0][0];
+	edges[2][1] = vertices[1][1] - vertices[0][1];
+
+	double area = triangleArea(vertices);
+
+	for (i = 0; i < 3; i++) {
+     4ef:	83 45 b8 01          	add    DWORD PTR [rbp-0x48],0x1
+     4f3:	83 7d b8 02          	cmp    DWORD PTR [rbp-0x48],0x2
+     4f7:	0f 8e 56 ff ff ff    	jle    453 <localStiffnessMatrix+0x100>
+		for (j = 0; j < 3; j++) {
+			localW[i][j] = 1 / (4 * area)
+					* scalarProduct(edges[i], edges[j], 2);
+		}
+	}
+}
+     4fd:	48 83 c4 58          	add    rsp,0x58
+     501:	5b                   	pop    rbx
+     502:	5d                   	pop    rbp
+     503:	c3                   	ret    
+
+0000000000000504 <lineCount>:
+
+int lineCount(FILE* file) {
+     504:	55                   	push   rbp
+     505:	48 89 e5             	mov    rbp,rsp
+     508:	48 81 ec 90 00 00 00 	sub    rsp,0x90
+     50f:	48 89 bd 78 ff ff ff 	mov    QWORD PTR [rbp-0x88],rdi
+     516:	64 48 8b 04 25 28 00 	mov    rax,QWORD PTR fs:0x28
+     51d:	00 00 
+     51f:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+     523:	31 c0                	xor    eax,eax
+	int lines = 0;
+     525:	c7 45 8c 00 00 00 00 	mov    DWORD PTR [rbp-0x74],0x0
+	char string[100];
+	rewind(file);
+     52c:	48 8b 85 78 ff ff ff 	mov    rax,QWORD PTR [rbp-0x88]
+     533:	48 89 c7             	mov    rdi,rax
+     536:	e8 00 00 00 00       	call   53b <lineCount+0x37>
+
+	while (fgets(string, sizeof(string), file) != NULL) {
+     53b:	eb 04                	jmp    541 <lineCount+0x3d>
+		lines++;
+     53d:	83 45 8c 01          	add    DWORD PTR [rbp-0x74],0x1
+int lineCount(FILE* file) {
+	int lines = 0;
+	char string[100];
+	rewind(file);
+
+	while (fgets(string, sizeof(string), file) != NULL) {
+     541:	48 8b 95 78 ff ff ff 	mov    rdx,QWORD PTR [rbp-0x88]
+     548:	48 8d 45 90          	lea    rax,[rbp-0x70]
+     54c:	be 64 00 00 00       	mov    esi,0x64
+     551:	48 89 c7             	mov    rdi,rax
+     554:	e8 00 00 00 00       	call   559 <lineCount+0x55>
+     559:	48 85 c0             	test   rax,rax
+     55c:	75 df                	jne    53d <lineCount+0x39>
+		lines++;
+	}
+	return lines;
+     55e:	8b 45 8c             	mov    eax,DWORD PTR [rbp-0x74]
+}
+     561:	48 8b 4d f8          	mov    rcx,QWORD PTR [rbp-0x8]
+     565:	64 48 33 0c 25 28 00 	xor    rcx,QWORD PTR fs:0x28
+     56c:	00 00 
+     56e:	74 05                	je     575 <lineCount+0x71>
+     570:	e8 00 00 00 00       	call   575 <lineCount+0x71>
+     575:	c9                   	leave  
+     576:	c3                   	ret    
+
+0000000000000577 <readMatrixFile>:
+
+double* readMatrixFile(FILE* file, int rows, int columns) {
+     577:	55                   	push   rbp
+     578:	48 89 e5             	mov    rbp,rsp
+     57b:	53                   	push   rbx
+     57c:	48 81 ec a8 00 00 00 	sub    rsp,0xa8
+     583:	48 89 bd 68 ff ff ff 	mov    QWORD PTR [rbp-0x98],rdi
+     58a:	89 b5 64 ff ff ff    	mov    DWORD PTR [rbp-0x9c],esi
+     590:	89 95 60 ff ff ff    	mov    DWORD PTR [rbp-0xa0],edx
+     596:	64 48 8b 04 25 28 00 	mov    rax,QWORD PTR fs:0x28
+     59d:	00 00 
+     59f:	48 89 45 e8          	mov    QWORD PTR [rbp-0x18],rax
+     5a3:	31 c0                	xor    eax,eax
+	int j = 0, i = 0;
+     5a5:	c7 85 70 ff ff ff 00 	mov    DWORD PTR [rbp-0x90],0x0
+     5ac:	00 00 00 
+     5af:	c7 85 74 ff ff ff 00 	mov    DWORD PTR [rbp-0x8c],0x0
+     5b6:	00 00 00 
+	char string[100];
+	rewind(file);
+     5b9:	48 8b 85 68 ff ff ff 	mov    rax,QWORD PTR [rbp-0x98]
+     5c0:	48 89 c7             	mov    rdi,rax
+     5c3:	e8 00 00 00 00       	call   5c8 <readMatrixFile+0x51>
+
+	double* matrix = (double*) malloc(rows * columns * sizeof(double));
+     5c8:	8b 85 64 ff ff ff    	mov    eax,DWORD PTR [rbp-0x9c]
+     5ce:	0f af 85 60 ff ff ff 	imul   eax,DWORD PTR [rbp-0xa0]
+     5d5:	48 98                	cdqe   
+     5d7:	48 c1 e0 03          	shl    rax,0x3
+     5db:	48 89 c7             	mov    rdi,rax
+     5de:	e8 00 00 00 00       	call   5e3 <readMatrixFile+0x6c>
+     5e3:	48 89 85 78 ff ff ff 	mov    QWORD PTR [rbp-0x88],rax
+	while (fgets(string, sizeof(string), file) != NULL) {
+     5ea:	e9 91 00 00 00       	jmp    680 <readMatrixFile+0x109>
+		for (j = 0; j < columns; j++) {
+     5ef:	c7 85 70 ff ff ff 00 	mov    DWORD PTR [rbp-0x90],0x0
+     5f6:	00 00 00 
+     5f9:	eb 70                	jmp    66b <readMatrixFile+0xf4>
+			*(matrix + i * columns + j) = atof(
+     5fb:	8b 85 74 ff ff ff    	mov    eax,DWORD PTR [rbp-0x8c]
+     601:	0f af 85 60 ff ff ff 	imul   eax,DWORD PTR [rbp-0xa0]
+     608:	48 63 d0             	movsxd rdx,eax
+     60b:	8b 85 70 ff ff ff    	mov    eax,DWORD PTR [rbp-0x90]
+     611:	48 98                	cdqe   
+     613:	48 01 d0             	add    rax,rdx
+     616:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     61d:	00 
+     61e:	48 8b 85 78 ff ff ff 	mov    rax,QWORD PTR [rbp-0x88]
+     625:	48 8d 1c 02          	lea    rbx,[rdx+rax*1]
+					strtok(j == 0 ? string : NULL, ","));
+     629:	83 bd 70 ff ff ff 00 	cmp    DWORD PTR [rbp-0x90],0x0
+     630:	75 06                	jne    638 <readMatrixFile+0xc1>
+     632:	48 8d 45 80          	lea    rax,[rbp-0x80]
+     636:	eb 05                	jmp    63d <readMatrixFile+0xc6>
+     638:	b8 00 00 00 00       	mov    eax,0x0
+     63d:	be 00 00 00 00       	mov    esi,0x0
+     642:	48 89 c7             	mov    rdi,rax
+     645:	e8 00 00 00 00       	call   64a <readMatrixFile+0xd3>
+	rewind(file);
+
+	double* matrix = (double*) malloc(rows * columns * sizeof(double));
+	while (fgets(string, sizeof(string), file) != NULL) {
+		for (j = 0; j < columns; j++) {
+			*(matrix + i * columns + j) = atof(
+     64a:	48 89 c7             	mov    rdi,rax
+     64d:	e8 00 00 00 00       	call   652 <readMatrixFile+0xdb>
+     652:	f2 0f 11 85 58 ff ff 	movsd  QWORD PTR [rbp-0xa8],xmm0
+     659:	ff 
+     65a:	48 8b 85 58 ff ff ff 	mov    rax,QWORD PTR [rbp-0xa8]
+     661:	48 89 03             	mov    QWORD PTR [rbx],rax
+	char string[100];
+	rewind(file);
+
+	double* matrix = (double*) malloc(rows * columns * sizeof(double));
+	while (fgets(string, sizeof(string), file) != NULL) {
+		for (j = 0; j < columns; j++) {
+     664:	83 85 70 ff ff ff 01 	add    DWORD PTR [rbp-0x90],0x1
+     66b:	8b 85 70 ff ff ff    	mov    eax,DWORD PTR [rbp-0x90]
+     671:	3b 85 60 ff ff ff    	cmp    eax,DWORD PTR [rbp-0xa0]
+     677:	7c 82                	jl     5fb <readMatrixFile+0x84>
+			*(matrix + i * columns + j) = atof(
+					strtok(j == 0 ? string : NULL, ","));
+		}
+		i++;
+     679:	83 85 74 ff ff ff 01 	add    DWORD PTR [rbp-0x8c],0x1
+	int j = 0, i = 0;
+	char string[100];
+	rewind(file);
+
+	double* matrix = (double*) malloc(rows * columns * sizeof(double));
+	while (fgets(string, sizeof(string), file) != NULL) {
+     680:	48 8b 95 68 ff ff ff 	mov    rdx,QWORD PTR [rbp-0x98]
+     687:	48 8d 45 80          	lea    rax,[rbp-0x80]
+     68b:	be 64 00 00 00       	mov    esi,0x64
+     690:	48 89 c7             	mov    rdi,rax
+     693:	e8 00 00 00 00       	call   698 <readMatrixFile+0x121>
+     698:	48 85 c0             	test   rax,rax
+     69b:	0f 85 4e ff ff ff    	jne    5ef <readMatrixFile+0x78>
+			*(matrix + i * columns + j) = atof(
+					strtok(j == 0 ? string : NULL, ","));
+		}
+		i++;
+	}
+	return matrix;
+     6a1:	48 8b 85 78 ff ff ff 	mov    rax,QWORD PTR [rbp-0x88]
+}
+     6a8:	48 8b 4d e8          	mov    rcx,QWORD PTR [rbp-0x18]
+     6ac:	64 48 33 0c 25 28 00 	xor    rcx,QWORD PTR fs:0x28
+     6b3:	00 00 
+     6b5:	74 05                	je     6bc <readMatrixFile+0x145>
+     6b7:	e8 00 00 00 00       	call   6bc <readMatrixFile+0x145>
+     6bc:	48 81 c4 a8 00 00 00 	add    rsp,0xa8
+     6c3:	5b                   	pop    rbx
+     6c4:	5d                   	pop    rbp
+     6c5:	c3                   	ret    
+
+00000000000006c6 <zeros>:
+
+double* zeros(int dim) {
+     6c6:	55                   	push   rbp
+     6c7:	48 89 e5             	mov    rbp,rsp
+     6ca:	48 83 ec 30          	sub    rsp,0x30
+     6ce:	89 7d dc             	mov    DWORD PTR [rbp-0x24],edi
+	int i = 0;
+     6d1:	c7 45 ec 00 00 00 00 	mov    DWORD PTR [rbp-0x14],0x0
+	double* vector __attribute__ ((aligned (16)));
+	vector = (double*) malloc(sizeof(double) * dim);
+     6d8:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     6db:	48 98                	cdqe   
+     6dd:	48 c1 e0 03          	shl    rax,0x3
+     6e1:	48 89 c7             	mov    rdi,rax
+     6e4:	e8 00 00 00 00       	call   6e9 <zeros+0x23>
+     6e9:	48 89 45 f0          	mov    QWORD PTR [rbp-0x10],rax
+#pragma omp parallel for private(i) schedule(static)
+	for (i = 0; i < dim; i++) {
+     6ed:	c7 45 ec 00 00 00 00 	mov    DWORD PTR [rbp-0x14],0x0
+     6f4:	eb 20                	jmp    716 <zeros+0x50>
+		vector[i] = 0;
+     6f6:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     6f9:	48 98                	cdqe   
+     6fb:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     702:	00 
+     703:	48 8b 45 f0          	mov    rax,QWORD PTR [rbp-0x10]
+     707:	48 01 c2             	add    rdx,rax
+     70a:	b8 00 00 00 00       	mov    eax,0x0
+     70f:	48 89 02             	mov    QWORD PTR [rdx],rax
+double* zeros(int dim) {
+	int i = 0;
+	double* vector __attribute__ ((aligned (16)));
+	vector = (double*) malloc(sizeof(double) * dim);
+#pragma omp parallel for private(i) schedule(static)
+	for (i = 0; i < dim; i++) {
+     712:	83 45 ec 01          	add    DWORD PTR [rbp-0x14],0x1
+     716:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     719:	3b 45 dc             	cmp    eax,DWORD PTR [rbp-0x24]
+     71c:	7c d8                	jl     6f6 <zeros+0x30>
+		vector[i] = 0;
+	}
+	return vector;
+     71e:	48 8b 45 f0          	mov    rax,QWORD PTR [rbp-0x10]
+}
+     722:	c9                   	leave  
+     723:	c3                   	ret    
+
+0000000000000724 <gaussianElimination>:
+
+void gaussianElimination(int n, double* matrix, double b[]){
+     724:	55                   	push   rbp
+     725:	48 89 e5             	mov    rbp,rsp
+     728:	89 7d dc             	mov    DWORD PTR [rbp-0x24],edi
+     72b:	48 89 75 d0          	mov    QWORD PTR [rbp-0x30],rsi
+     72f:	48 89 55 c8          	mov    QWORD PTR [rbp-0x38],rdx
+	int j, i, k;
+	double aux;
+
+	/* Gaussian elimination */
+	for (j = 0; j < (n - 1); j++) { // prova sullo static, default è dynamic
+     733:	c7 45 ec 00 00 00 00 	mov    DWORD PTR [rbp-0x14],0x0
+     73a:	e9 63 01 00 00       	jmp    8a2 <gaussianElimination+0x17e>
+#pragma omp parallel for private(aux, i, k) schedule(static)
+		for (i = (j + 1); i < n; i++) {
+     73f:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     742:	83 c0 01             	add    eax,0x1
+     745:	89 45 f0             	mov    DWORD PTR [rbp-0x10],eax
+     748:	e9 45 01 00 00       	jmp    892 <gaussianElimination+0x16e>
+			aux = *(matrix + n * i + j) / *(matrix + n * j + j);
+     74d:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     750:	0f af 45 f0          	imul   eax,DWORD PTR [rbp-0x10]
+     754:	48 63 d0             	movsxd rdx,eax
+     757:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     75a:	48 98                	cdqe   
+     75c:	48 01 d0             	add    rax,rdx
+     75f:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     766:	00 
+     767:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     76b:	48 01 d0             	add    rax,rdx
+     76e:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     772:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     775:	0f af 45 ec          	imul   eax,DWORD PTR [rbp-0x14]
+     779:	48 63 d0             	movsxd rdx,eax
+     77c:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     77f:	48 98                	cdqe   
+     781:	48 01 d0             	add    rax,rdx
+     784:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     78b:	00 
+     78c:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     790:	48 01 d0             	add    rax,rdx
+     793:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     797:	f2 0f 5e c1          	divsd  xmm0,xmm1
+     79b:	f2 0f 11 45 f8       	movsd  QWORD PTR [rbp-0x8],xmm0
+			for (k = j; k < n; k++) {
+     7a0:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     7a3:	89 45 f4             	mov    DWORD PTR [rbp-0xc],eax
+     7a6:	e9 80 00 00 00       	jmp    82b <gaussianElimination+0x107>
+				*(matrix + n * i + k) -= (aux * (*(matrix + n * j + k)));
+     7ab:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     7ae:	0f af 45 f0          	imul   eax,DWORD PTR [rbp-0x10]
+     7b2:	48 63 d0             	movsxd rdx,eax
+     7b5:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     7b8:	48 98                	cdqe   
+     7ba:	48 01 d0             	add    rax,rdx
+     7bd:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     7c4:	00 
+     7c5:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     7c9:	48 01 c2             	add    rdx,rax
+     7cc:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     7cf:	0f af 45 f0          	imul   eax,DWORD PTR [rbp-0x10]
+     7d3:	48 63 c8             	movsxd rcx,eax
+     7d6:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     7d9:	48 98                	cdqe   
+     7db:	48 01 c8             	add    rax,rcx
+     7de:	48 8d 0c c5 00 00 00 	lea    rcx,[rax*8+0x0]
+     7e5:	00 
+     7e6:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     7ea:	48 01 c8             	add    rax,rcx
+     7ed:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     7f1:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     7f4:	0f af 45 ec          	imul   eax,DWORD PTR [rbp-0x14]
+     7f8:	48 63 c8             	movsxd rcx,eax
+     7fb:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     7fe:	48 98                	cdqe   
+     800:	48 01 c8             	add    rax,rcx
+     803:	48 8d 0c c5 00 00 00 	lea    rcx,[rax*8+0x0]
+     80a:	00 
+     80b:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     80f:	48 01 c8             	add    rax,rcx
+     812:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     816:	f2 0f 59 45 f8       	mulsd  xmm0,QWORD PTR [rbp-0x8]
+     81b:	f2 0f 5c c8          	subsd  xmm1,xmm0
+     81f:	66 0f 28 c1          	movapd xmm0,xmm1
+     823:	f2 0f 11 02          	movsd  QWORD PTR [rdx],xmm0
+	/* Gaussian elimination */
+	for (j = 0; j < (n - 1); j++) { // prova sullo static, default è dynamic
+#pragma omp parallel for private(aux, i, k) schedule(static)
+		for (i = (j + 1); i < n; i++) {
+			aux = *(matrix + n * i + j) / *(matrix + n * j + j);
+			for (k = j; k < n; k++) {
+     827:	83 45 f4 01          	add    DWORD PTR [rbp-0xc],0x1
+     82b:	8b 45 f4             	mov    eax,DWORD PTR [rbp-0xc]
+     82e:	3b 45 dc             	cmp    eax,DWORD PTR [rbp-0x24]
+     831:	0f 8c 74 ff ff ff    	jl     7ab <gaussianElimination+0x87>
+				*(matrix + n * i + k) -= (aux * (*(matrix + n * j + k)));
+			}
+			b[i] -= (aux * b[j]);
+     837:	8b 45 f0             	mov    eax,DWORD PTR [rbp-0x10]
+     83a:	48 98                	cdqe   
+     83c:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     843:	00 
+     844:	48 8b 45 c8          	mov    rax,QWORD PTR [rbp-0x38]
+     848:	48 01 d0             	add    rax,rdx
+     84b:	8b 55 f0             	mov    edx,DWORD PTR [rbp-0x10]
+     84e:	48 63 d2             	movsxd rdx,edx
+     851:	48 8d 0c d5 00 00 00 	lea    rcx,[rdx*8+0x0]
+     858:	00 
+     859:	48 8b 55 c8          	mov    rdx,QWORD PTR [rbp-0x38]
+     85d:	48 01 ca             	add    rdx,rcx
+     860:	f2 0f 10 0a          	movsd  xmm1,QWORD PTR [rdx]
+     864:	8b 55 ec             	mov    edx,DWORD PTR [rbp-0x14]
+     867:	48 63 d2             	movsxd rdx,edx
+     86a:	48 8d 0c d5 00 00 00 	lea    rcx,[rdx*8+0x0]
+     871:	00 
+     872:	48 8b 55 c8          	mov    rdx,QWORD PTR [rbp-0x38]
+     876:	48 01 ca             	add    rdx,rcx
+     879:	f2 0f 10 02          	movsd  xmm0,QWORD PTR [rdx]
+     87d:	f2 0f 59 45 f8       	mulsd  xmm0,QWORD PTR [rbp-0x8]
+     882:	f2 0f 5c c8          	subsd  xmm1,xmm0
+     886:	66 0f 28 c1          	movapd xmm0,xmm1
+     88a:	f2 0f 11 00          	movsd  QWORD PTR [rax],xmm0
+	double aux;
+
+	/* Gaussian elimination */
+	for (j = 0; j < (n - 1); j++) { // prova sullo static, default è dynamic
+#pragma omp parallel for private(aux, i, k) schedule(static)
+		for (i = (j + 1); i < n; i++) {
+     88e:	83 45 f0 01          	add    DWORD PTR [rbp-0x10],0x1
+     892:	8b 45 f0             	mov    eax,DWORD PTR [rbp-0x10]
+     895:	3b 45 dc             	cmp    eax,DWORD PTR [rbp-0x24]
+     898:	0f 8c af fe ff ff    	jl     74d <gaussianElimination+0x29>
+void gaussianElimination(int n, double* matrix, double b[]){
+	int j, i, k;
+	double aux;
+
+	/* Gaussian elimination */
+	for (j = 0; j < (n - 1); j++) { // prova sullo static, default è dynamic
+     89e:	83 45 ec 01          	add    DWORD PTR [rbp-0x14],0x1
+     8a2:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     8a5:	83 e8 01             	sub    eax,0x1
+     8a8:	3b 45 ec             	cmp    eax,DWORD PTR [rbp-0x14]
+     8ab:	0f 8f 8e fe ff ff    	jg     73f <gaussianElimination+0x1b>
+				*(matrix + n * i + k) -= (aux * (*(matrix + n * j + k)));
+			}
+			b[i] -= (aux * b[j]);
+		}
+	}
+}
+     8b1:	5d                   	pop    rbp
+     8b2:	c3                   	ret    
+
+00000000000008b3 <backSubstitution>:
+
+double* backSubstitution(int n, double* matrix, double b[]) {
+     8b3:	55                   	push   rbp
+     8b4:	48 89 e5             	mov    rbp,rsp
+     8b7:	48 83 ec 40          	sub    rsp,0x40
+     8bb:	89 7d dc             	mov    DWORD PTR [rbp-0x24],edi
+     8be:	48 89 75 d0          	mov    QWORD PTR [rbp-0x30],rsi
+     8c2:	48 89 55 c8          	mov    QWORD PTR [rbp-0x38],rdx
+
+	int i, j;
+	double temp;
+	double* x = zeros(n);
+     8c6:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     8c9:	89 c7                	mov    edi,eax
+     8cb:	e8 00 00 00 00       	call   8d0 <backSubstitution+0x1d>
+     8d0:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+
+	/* Back substitution */
+	x[n - 1] = b[n - 1] / *(matrix + n * (n - 1) + n - 1);
+     8d4:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     8d7:	48 98                	cdqe   
+     8d9:	48 c1 e0 03          	shl    rax,0x3
+     8dd:	48 8d 50 f8          	lea    rdx,[rax-0x8]
+     8e1:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+     8e5:	48 01 d0             	add    rax,rdx
+     8e8:	8b 55 dc             	mov    edx,DWORD PTR [rbp-0x24]
+     8eb:	48 63 d2             	movsxd rdx,edx
+     8ee:	48 c1 e2 03          	shl    rdx,0x3
+     8f2:	48 8d 4a f8          	lea    rcx,[rdx-0x8]
+     8f6:	48 8b 55 c8          	mov    rdx,QWORD PTR [rbp-0x38]
+     8fa:	48 01 ca             	add    rdx,rcx
+     8fd:	f2 0f 10 02          	movsd  xmm0,QWORD PTR [rdx]
+     901:	8b 55 dc             	mov    edx,DWORD PTR [rbp-0x24]
+     904:	83 ea 01             	sub    edx,0x1
+     907:	0f af 55 dc          	imul   edx,DWORD PTR [rbp-0x24]
+     90b:	48 63 ca             	movsxd rcx,edx
+     90e:	8b 55 dc             	mov    edx,DWORD PTR [rbp-0x24]
+     911:	48 63 d2             	movsxd rdx,edx
+     914:	48 01 ca             	add    rdx,rcx
+     917:	48 c1 e2 03          	shl    rdx,0x3
+     91b:	48 8d 4a f8          	lea    rcx,[rdx-0x8]
+     91f:	48 8b 55 d0          	mov    rdx,QWORD PTR [rbp-0x30]
+     923:	48 01 ca             	add    rdx,rcx
+     926:	f2 0f 10 0a          	movsd  xmm1,QWORD PTR [rdx]
+     92a:	f2 0f 5e c1          	divsd  xmm0,xmm1
+     92e:	f2 0f 11 00          	movsd  QWORD PTR [rax],xmm0
+	for (i = (n - 2); i >= 0; i--) {
+     932:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     935:	83 e8 02             	sub    eax,0x2
+     938:	89 45 e8             	mov    DWORD PTR [rbp-0x18],eax
+     93b:	e9 cf 00 00 00       	jmp    a0f <backSubstitution+0x15c>
+		temp = b[i];
+     940:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     943:	48 98                	cdqe   
+     945:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     94c:	00 
+     94d:	48 8b 45 c8          	mov    rax,QWORD PTR [rbp-0x38]
+     951:	48 01 d0             	add    rax,rdx
+     954:	48 8b 00             	mov    rax,QWORD PTR [rax]
+     957:	48 89 45 f0          	mov    QWORD PTR [rbp-0x10],rax
+		for (j = (i + 1); j < n; j++) {
+     95b:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     95e:	83 c0 01             	add    eax,0x1
+     961:	89 45 ec             	mov    DWORD PTR [rbp-0x14],eax
+     964:	eb 57                	jmp    9bd <backSubstitution+0x10a>
+			temp -= (*(matrix + n * i + j) * x[j]);
+     966:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     969:	0f af 45 e8          	imul   eax,DWORD PTR [rbp-0x18]
+     96d:	48 63 d0             	movsxd rdx,eax
+     970:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     973:	48 98                	cdqe   
+     975:	48 01 d0             	add    rax,rdx
+     978:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     97f:	00 
+     980:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     984:	48 01 d0             	add    rax,rdx
+     987:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     98b:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     98e:	48 98                	cdqe   
+     990:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     997:	00 
+     998:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+     99c:	48 01 d0             	add    rax,rdx
+     99f:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     9a3:	f2 0f 59 c1          	mulsd  xmm0,xmm1
+     9a7:	f2 0f 10 4d f0       	movsd  xmm1,QWORD PTR [rbp-0x10]
+     9ac:	f2 0f 5c c8          	subsd  xmm1,xmm0
+     9b0:	66 0f 28 c1          	movapd xmm0,xmm1
+     9b4:	f2 0f 11 45 f0       	movsd  QWORD PTR [rbp-0x10],xmm0
+
+	/* Back substitution */
+	x[n - 1] = b[n - 1] / *(matrix + n * (n - 1) + n - 1);
+	for (i = (n - 2); i >= 0; i--) {
+		temp = b[i];
+		for (j = (i + 1); j < n; j++) {
+     9b9:	83 45 ec 01          	add    DWORD PTR [rbp-0x14],0x1
+     9bd:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     9c0:	3b 45 dc             	cmp    eax,DWORD PTR [rbp-0x24]
+     9c3:	7c a1                	jl     966 <backSubstitution+0xb3>
+			temp -= (*(matrix + n * i + j) * x[j]);
+		}
+		x[i] = temp / *(matrix + n * i + i);
+     9c5:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     9c8:	48 98                	cdqe   
+     9ca:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     9d1:	00 
+     9d2:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+     9d6:	48 01 c2             	add    rdx,rax
+     9d9:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     9dc:	0f af 45 e8          	imul   eax,DWORD PTR [rbp-0x18]
+     9e0:	48 63 c8             	movsxd rcx,eax
+     9e3:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     9e6:	48 98                	cdqe   
+     9e8:	48 01 c8             	add    rax,rcx
+     9eb:	48 8d 0c c5 00 00 00 	lea    rcx,[rax*8+0x0]
+     9f2:	00 
+     9f3:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     9f7:	48 01 c8             	add    rax,rcx
+     9fa:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     9fe:	f2 0f 10 45 f0       	movsd  xmm0,QWORD PTR [rbp-0x10]
+     a03:	f2 0f 5e c1          	divsd  xmm0,xmm1
+     a07:	f2 0f 11 02          	movsd  QWORD PTR [rdx],xmm0
+	double temp;
+	double* x = zeros(n);
+
+	/* Back substitution */
+	x[n - 1] = b[n - 1] / *(matrix + n * (n - 1) + n - 1);
+	for (i = (n - 2); i >= 0; i--) {
+     a0b:	83 6d e8 01          	sub    DWORD PTR [rbp-0x18],0x1
+     a0f:	83 7d e8 00          	cmp    DWORD PTR [rbp-0x18],0x0
+     a13:	0f 89 27 ff ff ff    	jns    940 <backSubstitution+0x8d>
+			temp -= (*(matrix + n * i + j) * x[j]);
+		}
+		x[i] = temp / *(matrix + n * i + i);
+	}
+
+	return x;
+     a19:	48 8b 45 f8          	mov    rax,QWORD PTR [rbp-0x8]
+}
+     a1d:	c9                   	leave  
+     a1e:	c3                   	ret    
+
+0000000000000a1f <assignDirichletCondition>:
+
+void assignDirichletCondition(int meshSize, double g, double* meshPoints,
+		double* w, double* b) {
+     a1f:	55                   	push   rbp
+     a20:	48 89 e5             	mov    rbp,rsp
+     a23:	89 7d dc             	mov    DWORD PTR [rbp-0x24],edi
+     a26:	f2 0f 11 45 d0       	movsd  QWORD PTR [rbp-0x30],xmm0
+     a2b:	48 89 75 c8          	mov    QWORD PTR [rbp-0x38],rsi
+     a2f:	48 89 55 c0          	mov    QWORD PTR [rbp-0x40],rdx
+     a33:	48 89 4d b8          	mov    QWORD PTR [rbp-0x48],rcx
+	int i, j;
+
+#pragma omp parallel for private(i, j) schedule(dynamic)
+	for (i = 0; i < meshSize; i++) {
+     a37:	c7 45 e8 00 00 00 00 	mov    DWORD PTR [rbp-0x18],0x0
+     a3e:	e9 e8 00 00 00       	jmp    b2b <assignDirichletCondition+0x10c>
+		double x = *(meshPoints + 2 * i);
+     a43:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     a46:	48 98                	cdqe   
+     a48:	48 c1 e0 04          	shl    rax,0x4
+     a4c:	48 89 c2             	mov    rdx,rax
+     a4f:	48 8b 45 c8          	mov    rax,QWORD PTR [rbp-0x38]
+     a53:	48 01 d0             	add    rax,rdx
+     a56:	48 8b 00             	mov    rax,QWORD PTR [rax]
+     a59:	48 89 45 f0          	mov    QWORD PTR [rbp-0x10],rax
+		double y = *(meshPoints + 2 * i + 1);
+     a5d:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     a60:	48 98                	cdqe   
+     a62:	48 c1 e0 04          	shl    rax,0x4
+     a66:	48 8d 50 08          	lea    rdx,[rax+0x8]
+     a6a:	48 8b 45 c8          	mov    rax,QWORD PTR [rbp-0x38]
+     a6e:	48 01 d0             	add    rax,rdx
+     a71:	48 8b 00             	mov    rax,QWORD PTR [rax]
+     a74:	48 89 45 f8          	mov    QWORD PTR [rbp-0x8],rax
+		if (fabs(x * x + y * y - 1) < TOL) {
+     a78:	f2 0f 10 45 f0       	movsd  xmm0,QWORD PTR [rbp-0x10]
+     a7d:	66 0f 28 c8          	movapd xmm1,xmm0
+     a81:	f2 0f 59 4d f0       	mulsd  xmm1,QWORD PTR [rbp-0x10]
+     a86:	f2 0f 10 45 f8       	movsd  xmm0,QWORD PTR [rbp-0x8]
+     a8b:	f2 0f 59 45 f8       	mulsd  xmm0,QWORD PTR [rbp-0x8]
+     a90:	f2 0f 58 c1          	addsd  xmm0,xmm1
+     a94:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # a9c <assignDirichletCondition+0x7d>
+     a9b:	00 
+     a9c:	f2 0f 5c c1          	subsd  xmm0,xmm1
+     aa0:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # aa8 <assignDirichletCondition+0x89>
+     aa7:	00 
+     aa8:	66 0f 54 c1          	andpd  xmm0,xmm1
+     aac:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # ab4 <assignDirichletCondition+0x95>
+     ab3:	00 
+     ab4:	66 0f 2e c8          	ucomisd xmm1,xmm0
+     ab8:	76 6d                	jbe    b27 <assignDirichletCondition+0x108>
+			for (j = 0; j < meshSize; j++) {
+     aba:	c7 45 ec 00 00 00 00 	mov    DWORD PTR [rbp-0x14],0x0
+     ac1:	eb 41                	jmp    b04 <assignDirichletCondition+0xe5>
+				*(w + meshSize * i + j) = (i == j) ? 1 : 0;
+     ac3:	8b 45 dc             	mov    eax,DWORD PTR [rbp-0x24]
+     ac6:	0f af 45 e8          	imul   eax,DWORD PTR [rbp-0x18]
+     aca:	48 63 d0             	movsxd rdx,eax
+     acd:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     ad0:	48 98                	cdqe   
+     ad2:	48 01 d0             	add    rax,rdx
+     ad5:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     adc:	00 
+     add:	48 8b 45 c0          	mov    rax,QWORD PTR [rbp-0x40]
+     ae1:	48 01 c2             	add    rdx,rax
+     ae4:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     ae7:	3b 45 ec             	cmp    eax,DWORD PTR [rbp-0x14]
+     aea:	75 0c                	jne    af8 <assignDirichletCondition+0xd9>
+     aec:	48 b8 00 00 00 00 00 	movabs rax,0x3ff0000000000000
+     af3:	00 f0 3f 
+     af6:	eb 05                	jmp    afd <assignDirichletCondition+0xde>
+     af8:	b8 00 00 00 00       	mov    eax,0x0
+     afd:	48 89 02             	mov    QWORD PTR [rdx],rax
+#pragma omp parallel for private(i, j) schedule(dynamic)
+	for (i = 0; i < meshSize; i++) {
+		double x = *(meshPoints + 2 * i);
+		double y = *(meshPoints + 2 * i + 1);
+		if (fabs(x * x + y * y - 1) < TOL) {
+			for (j = 0; j < meshSize; j++) {
+     b00:	83 45 ec 01          	add    DWORD PTR [rbp-0x14],0x1
+     b04:	8b 45 ec             	mov    eax,DWORD PTR [rbp-0x14]
+     b07:	3b 45 dc             	cmp    eax,DWORD PTR [rbp-0x24]
+     b0a:	7c b7                	jl     ac3 <assignDirichletCondition+0xa4>
+				*(w + meshSize * i + j) = (i == j) ? 1 : 0;
+			}
+			b[i] = g;
+     b0c:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     b0f:	48 98                	cdqe   
+     b11:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     b18:	00 
+     b19:	48 8b 45 b8          	mov    rax,QWORD PTR [rbp-0x48]
+     b1d:	48 01 c2             	add    rdx,rax
+     b20:	48 8b 45 d0          	mov    rax,QWORD PTR [rbp-0x30]
+     b24:	48 89 02             	mov    QWORD PTR [rdx],rax
+void assignDirichletCondition(int meshSize, double g, double* meshPoints,
+		double* w, double* b) {
+	int i, j;
+
+#pragma omp parallel for private(i, j) schedule(dynamic)
+	for (i = 0; i < meshSize; i++) {
+     b27:	83 45 e8 01          	add    DWORD PTR [rbp-0x18],0x1
+     b2b:	8b 45 e8             	mov    eax,DWORD PTR [rbp-0x18]
+     b2e:	3b 45 dc             	cmp    eax,DWORD PTR [rbp-0x24]
+     b31:	0f 8c 0c ff ff ff    	jl     a43 <assignDirichletCondition+0x24>
+				*(w + meshSize * i + j) = (i == j) ? 1 : 0;
+			}
+			b[i] = g;
+		}
+	}
+}
+     b37:	5d                   	pop    rbp
+     b38:	c3                   	ret    
+
+0000000000000b39 <solvePDE>:
+
+double* solvePDE(char fileP[], char fileT[], FILE* result) {
+     b39:	55                   	push   rbp
+     b3a:	48 89 e5             	mov    rbp,rsp
+     b3d:	41 54                	push   r12
+     b3f:	53                   	push   rbx
+     b40:	48 81 ec 30 02 00 00 	sub    rsp,0x230
+     b47:	48 89 bd 08 fe ff ff 	mov    QWORD PTR [rbp-0x1f8],rdi
+     b4e:	48 89 b5 00 fe ff ff 	mov    QWORD PTR [rbp-0x200],rsi
+     b55:	48 89 95 f8 fd ff ff 	mov    QWORD PTR [rbp-0x208],rdx
+
+	int vertexSize, globalVertex2, globalVertex, meshSize;
+	int tri = 0, i = 0, j = 0;
+     b5c:	c7 85 1c fe ff ff 00 	mov    DWORD PTR [rbp-0x1e4],0x0
+     b63:	00 00 00 
+     b66:	c7 85 20 fe ff ff 00 	mov    DWORD PTR [rbp-0x1e0],0x0
+     b6d:	00 00 00 
+     b70:	c7 85 24 fe ff ff 00 	mov    DWORD PTR [rbp-0x1dc],0x0
+     b77:	00 00 00 
+	double f = -4, g = 1;
+     b7a:	48 b8 00 00 00 00 00 	movabs rax,0xc010000000000000
+     b81:	00 10 c0 
+     b84:	48 89 85 38 fe ff ff 	mov    QWORD PTR [rbp-0x1c8],rax
+     b8b:	48 b8 00 00 00 00 00 	movabs rax,0x3ff0000000000000
+     b92:	00 f0 3f 
+     b95:	48 89 85 40 fe ff ff 	mov    QWORD PTR [rbp-0x1c0],rax
+	double vertices[3][2] = { { 0 } };
+     b9c:	48 8d b5 70 ff ff ff 	lea    rsi,[rbp-0x90]
+     ba3:	b8 00 00 00 00       	mov    eax,0x0
+     ba8:	ba 06 00 00 00       	mov    edx,0x6
+     bad:	48 89 f7             	mov    rdi,rsi
+     bb0:	48 89 d1             	mov    rcx,rdx
+     bb3:	f3 48 ab             	rep stos QWORD PTR es:[rdi],rax
+	double localW[3][3] = { { 0 } };
+     bb6:	48 8d 75 a0          	lea    rsi,[rbp-0x60]
+     bba:	b8 00 00 00 00       	mov    eax,0x0
+     bbf:	ba 09 00 00 00       	mov    edx,0x9
+     bc4:	48 89 f7             	mov    rdi,rsi
+     bc7:	48 89 d1             	mov    rcx,rdx
+     bca:	f3 48 ab             	rep stos QWORD PTR es:[rdi],rax
+	double localB[3] = { 1 };
+     bcd:	48 c7 85 50 ff ff ff 	mov    QWORD PTR [rbp-0xb0],0x0
+     bd4:	00 00 00 00 
+     bd8:	48 c7 85 58 ff ff ff 	mov    QWORD PTR [rbp-0xa8],0x0
+     bdf:	00 00 00 00 
+     be3:	48 c7 85 60 ff ff ff 	mov    QWORD PTR [rbp-0xa0],0x0
+     bea:	00 00 00 00 
+     bee:	48 b8 00 00 00 00 00 	movabs rax,0x3ff0000000000000
+     bf5:	00 f0 3f 
+     bf8:	48 89 85 50 ff ff ff 	mov    QWORD PTR [rbp-0xb0],rax
+
+	FILE* meshFile = fopen(fileP, "r");
+     bff:	48 8b 85 08 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1f8]
+     c06:	be 00 00 00 00       	mov    esi,0x0
+     c0b:	48 89 c7             	mov    rdi,rax
+     c0e:	e8 00 00 00 00       	call   c13 <solvePDE+0xda>
+     c13:	48 89 85 48 fe ff ff 	mov    QWORD PTR [rbp-0x1b8],rax
+	FILE* vertexFile = fopen(fileT, "r");
+     c1a:	48 8b 85 00 fe ff ff 	mov    rax,QWORD PTR [rbp-0x200]
+     c21:	be 00 00 00 00       	mov    esi,0x0
+     c26:	48 89 c7             	mov    rdi,rax
+     c29:	e8 00 00 00 00       	call   c2e <solvePDE+0xf5>
+     c2e:	48 89 85 50 fe ff ff 	mov    QWORD PTR [rbp-0x1b0],rax
+
+	vertexSize = lineCount(vertexFile);
+     c35:	48 8b 85 50 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b0]
+     c3c:	48 89 c7             	mov    rdi,rax
+     c3f:	e8 00 00 00 00       	call   c44 <solvePDE+0x10b>
+     c44:	89 85 28 fe ff ff    	mov    DWORD PTR [rbp-0x1d8],eax
+	meshSize = lineCount(meshFile);
+     c4a:	48 8b 85 48 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b8]
+     c51:	48 89 c7             	mov    rdi,rax
+     c54:	e8 00 00 00 00       	call   c59 <solvePDE+0x120>
+     c59:	89 85 2c fe ff ff    	mov    DWORD PTR [rbp-0x1d4],eax
+
+	/* Read files: START */
+	double startIO = omp_get_wtime();
+     c5f:	e8 00 00 00 00       	call   c64 <solvePDE+0x12b>
+     c64:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+     c6b:	ff 
+     c6c:	48 8b 85 f0 fd ff ff 	mov    rax,QWORD PTR [rbp-0x210]
+     c73:	48 89 85 58 fe ff ff 	mov    QWORD PTR [rbp-0x1a8],rax
+	clock_t startIOCPU = clock();
+     c7a:	e8 00 00 00 00       	call   c7f <solvePDE+0x146>
+     c7f:	48 89 85 60 fe ff ff 	mov    QWORD PTR [rbp-0x1a0],rax
+
+	double* meshPoints = readMatrixFile(meshFile, lineCount(meshFile), 2);
+     c86:	48 8b 85 48 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b8]
+     c8d:	48 89 c7             	mov    rdi,rax
+     c90:	e8 00 00 00 00       	call   c95 <solvePDE+0x15c>
+     c95:	89 c1                	mov    ecx,eax
+     c97:	48 8b 85 48 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b8]
+     c9e:	ba 02 00 00 00       	mov    edx,0x2
+     ca3:	89 ce                	mov    esi,ecx
+     ca5:	48 89 c7             	mov    rdi,rax
+     ca8:	e8 00 00 00 00       	call   cad <solvePDE+0x174>
+     cad:	48 89 85 68 fe ff ff 	mov    QWORD PTR [rbp-0x198],rax
+	double* vertexNumbers = readMatrixFile(vertexFile, lineCount(vertexFile), 3);
+     cb4:	48 8b 85 50 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b0]
+     cbb:	48 89 c7             	mov    rdi,rax
+     cbe:	e8 00 00 00 00       	call   cc3 <solvePDE+0x18a>
+     cc3:	89 c1                	mov    ecx,eax
+     cc5:	48 8b 85 50 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b0]
+     ccc:	ba 03 00 00 00       	mov    edx,0x3
+     cd1:	89 ce                	mov    esi,ecx
+     cd3:	48 89 c7             	mov    rdi,rax
+     cd6:	e8 00 00 00 00       	call   cdb <solvePDE+0x1a2>
+     cdb:	48 89 85 70 fe ff ff 	mov    QWORD PTR [rbp-0x190],rax
+
+	double ioTime = omp_get_wtime() - startIO;
+     ce2:	e8 00 00 00 00       	call   ce7 <solvePDE+0x1ae>
+     ce7:	f2 0f 5c 85 58 fe ff 	subsd  xmm0,QWORD PTR [rbp-0x1a8]
+     cee:	ff 
+     cef:	f2 0f 11 85 78 fe ff 	movsd  QWORD PTR [rbp-0x188],xmm0
+     cf6:	ff 
+	double ioTimeCPU = ((double) (clock() - startIOCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
+     cf7:	e8 00 00 00 00       	call   cfc <solvePDE+0x1c3>
+     cfc:	48 2b 85 60 fe ff ff 	sub    rax,QWORD PTR [rbp-0x1a0]
+     d03:	f2 48 0f 2a c0       	cvtsi2sd xmm0,rax
+     d08:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # d10 <solvePDE+0x1d7>
+     d0f:	00 
+     d10:	f2 0f 5e c1          	divsd  xmm0,xmm1
+     d14:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+     d1b:	ff 
+     d1c:	e8 00 00 00 00       	call   d21 <solvePDE+0x1e8>
+     d21:	f2 0f 2a c0          	cvtsi2sd xmm0,eax
+     d25:	f2 0f 10 95 f0 fd ff 	movsd  xmm2,QWORD PTR [rbp-0x210]
+     d2c:	ff 
+     d2d:	f2 0f 5e d0          	divsd  xmm2,xmm0
+     d31:	66 0f 28 c2          	movapd xmm0,xmm2
+     d35:	f2 0f 11 85 80 fe ff 	movsd  QWORD PTR [rbp-0x180],xmm0
+     d3c:	ff 
+	/* Read files: END */
+
+	/* Prepare matrices: START */
+	double startZeros = omp_get_wtime();
+     d3d:	e8 00 00 00 00       	call   d42 <solvePDE+0x209>
+     d42:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+     d49:	ff 
+     d4a:	48 8b 85 f0 fd ff ff 	mov    rax,QWORD PTR [rbp-0x210]
+     d51:	48 89 85 88 fe ff ff 	mov    QWORD PTR [rbp-0x178],rax
+	clock_t startZerosCPU = clock();
+     d58:	e8 00 00 00 00       	call   d5d <solvePDE+0x224>
+     d5d:	48 89 85 90 fe ff ff 	mov    QWORD PTR [rbp-0x170],rax
+	double* w = zeros(meshSize * meshSize);
+     d64:	8b 85 2c fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d4]
+     d6a:	0f af 85 2c fe ff ff 	imul   eax,DWORD PTR [rbp-0x1d4]
+     d71:	89 c7                	mov    edi,eax
+     d73:	e8 00 00 00 00       	call   d78 <solvePDE+0x23f>
+     d78:	48 89 85 98 fe ff ff 	mov    QWORD PTR [rbp-0x168],rax
+	double* b = zeros(meshSize);
+     d7f:	8b 85 2c fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d4]
+     d85:	89 c7                	mov    edi,eax
+     d87:	e8 00 00 00 00       	call   d8c <solvePDE+0x253>
+     d8c:	48 89 85 a0 fe ff ff 	mov    QWORD PTR [rbp-0x160],rax
+	double zerosTime = omp_get_wtime() - startZeros;
+     d93:	e8 00 00 00 00       	call   d98 <solvePDE+0x25f>
+     d98:	f2 0f 5c 85 88 fe ff 	subsd  xmm0,QWORD PTR [rbp-0x178]
+     d9f:	ff 
+     da0:	f2 0f 11 85 a8 fe ff 	movsd  QWORD PTR [rbp-0x158],xmm0
+     da7:	ff 
+	double zerosTimeCPU = ((double) (clock() - startZerosCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
+     da8:	e8 00 00 00 00       	call   dad <solvePDE+0x274>
+     dad:	48 2b 85 90 fe ff ff 	sub    rax,QWORD PTR [rbp-0x170]
+     db4:	f2 48 0f 2a c0       	cvtsi2sd xmm0,rax
+     db9:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # dc1 <solvePDE+0x288>
+     dc0:	00 
+     dc1:	f2 0f 5e c1          	divsd  xmm0,xmm1
+     dc5:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+     dcc:	ff 
+     dcd:	e8 00 00 00 00       	call   dd2 <solvePDE+0x299>
+     dd2:	f2 0f 2a c0          	cvtsi2sd xmm0,eax
+     dd6:	f2 0f 10 9d f0 fd ff 	movsd  xmm3,QWORD PTR [rbp-0x210]
+     ddd:	ff 
+     dde:	f2 0f 5e d8          	divsd  xmm3,xmm0
+     de2:	66 0f 28 c3          	movapd xmm0,xmm3
+     de6:	f2 0f 11 85 b0 fe ff 	movsd  QWORD PTR [rbp-0x150],xmm0
+     ded:	ff 
+	/* Prepare matrices: START */
+
+	/* Assembling: START */
+	double startComputation = omp_get_wtime();
+     dee:	e8 00 00 00 00       	call   df3 <solvePDE+0x2ba>
+     df3:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+     dfa:	ff 
+     dfb:	48 8b 85 f0 fd ff ff 	mov    rax,QWORD PTR [rbp-0x210]
+     e02:	48 89 85 b8 fe ff ff 	mov    QWORD PTR [rbp-0x148],rax
+	clock_t startComputationCPU = clock();
+     e09:	e8 00 00 00 00       	call   e0e <solvePDE+0x2d5>
+     e0e:	48 89 85 c0 fe ff ff 	mov    QWORD PTR [rbp-0x140],rax
+#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2, vertices, localW, localB) schedule(dynamic)
+	for (tri = 0; tri < vertexSize; tri++) {
+     e15:	c7 85 1c fe ff ff 00 	mov    DWORD PTR [rbp-0x1e4],0x0
+     e1c:	00 00 00 
+     e1f:	e9 b7 02 00 00       	jmp    10db <solvePDE+0x5a2>
+		for (i = 0; i < 3; i++) {
+     e24:	c7 85 20 fe ff ff 00 	mov    DWORD PTR [rbp-0x1e0],0x0
+     e2b:	00 00 00 
+     e2e:	e9 b3 00 00 00       	jmp    ee6 <solvePDE+0x3ad>
+			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+     e33:	8b 95 1c fe ff ff    	mov    edx,DWORD PTR [rbp-0x1e4]
+     e39:	89 d0                	mov    eax,edx
+     e3b:	01 c0                	add    eax,eax
+     e3d:	01 d0                	add    eax,edx
+     e3f:	48 63 d0             	movsxd rdx,eax
+     e42:	8b 85 20 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1e0]
+     e48:	48 98                	cdqe   
+     e4a:	48 01 d0             	add    rax,rdx
+     e4d:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     e54:	00 
+     e55:	48 8b 85 70 fe ff ff 	mov    rax,QWORD PTR [rbp-0x190]
+     e5c:	48 01 d0             	add    rax,rdx
+     e5f:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     e63:	f2 0f 2c c0          	cvttsd2si eax,xmm0
+     e67:	83 e8 01             	sub    eax,0x1
+     e6a:	89 85 30 fe ff ff    	mov    DWORD PTR [rbp-0x1d0],eax
+			vertices[i][0] = *(meshPoints + globalVertex * 2 + 0);
+     e70:	8b 85 30 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d0]
+     e76:	48 98                	cdqe   
+     e78:	48 c1 e0 04          	shl    rax,0x4
+     e7c:	48 89 c2             	mov    rdx,rax
+     e7f:	48 8b 85 68 fe ff ff 	mov    rax,QWORD PTR [rbp-0x198]
+     e86:	48 01 d0             	add    rax,rdx
+     e89:	48 8b 00             	mov    rax,QWORD PTR [rax]
+     e8c:	8b 95 20 fe ff ff    	mov    edx,DWORD PTR [rbp-0x1e0]
+     e92:	48 63 d2             	movsxd rdx,edx
+     e95:	48 c1 e2 04          	shl    rdx,0x4
+     e99:	48 8d 5d f0          	lea    rbx,[rbp-0x10]
+     e9d:	48 01 da             	add    rdx,rbx
+     ea0:	48 83 c2 80          	add    rdx,0xffffffffffffff80
+     ea4:	48 89 02             	mov    QWORD PTR [rdx],rax
+			vertices[i][1] = *(meshPoints + globalVertex * 2 + 1);
+     ea7:	8b 85 30 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d0]
+     ead:	48 98                	cdqe   
+     eaf:	48 c1 e0 04          	shl    rax,0x4
+     eb3:	48 8d 50 08          	lea    rdx,[rax+0x8]
+     eb7:	48 8b 85 68 fe ff ff 	mov    rax,QWORD PTR [rbp-0x198]
+     ebe:	48 01 d0             	add    rax,rdx
+     ec1:	48 8b 00             	mov    rax,QWORD PTR [rax]
+     ec4:	8b 95 20 fe ff ff    	mov    edx,DWORD PTR [rbp-0x1e0]
+     eca:	48 63 d2             	movsxd rdx,edx
+     ecd:	48 c1 e2 04          	shl    rdx,0x4
+     ed1:	48 8d 5d f0          	lea    rbx,[rbp-0x10]
+     ed5:	48 01 da             	add    rdx,rbx
+     ed8:	48 83 ea 78          	sub    rdx,0x78
+     edc:	48 89 02             	mov    QWORD PTR [rdx],rax
+	/* Assembling: START */
+	double startComputation = omp_get_wtime();
+	clock_t startComputationCPU = clock();
+#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2, vertices, localW, localB) schedule(dynamic)
+	for (tri = 0; tri < vertexSize; tri++) {
+		for (i = 0; i < 3; i++) {
+     edf:	83 85 20 fe ff ff 01 	add    DWORD PTR [rbp-0x1e0],0x1
+     ee6:	83 bd 20 fe ff ff 02 	cmp    DWORD PTR [rbp-0x1e0],0x2
+     eed:	0f 8e 40 ff ff ff    	jle    e33 <solvePDE+0x2fa>
+			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+			vertices[i][0] = *(meshPoints + globalVertex * 2 + 0);
+			vertices[i][1] = *(meshPoints + globalVertex * 2 + 1);
+		}
+
+		localStiffnessMatrix(vertices, localW);
+     ef3:	48 8d 55 a0          	lea    rdx,[rbp-0x60]
+     ef7:	48 8d 85 70 ff ff ff 	lea    rax,[rbp-0x90]
+     efe:	48 89 d6             	mov    rsi,rdx
+     f01:	48 89 c7             	mov    rdi,rax
+     f04:	e8 00 00 00 00       	call   f09 <solvePDE+0x3d0>
+		localVector(vertices, f, localB);
+     f09:	48 8d 8d 50 ff ff ff 	lea    rcx,[rbp-0xb0]
+     f10:	48 8b 85 38 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1c8]
+     f17:	48 8d 95 70 ff ff ff 	lea    rdx,[rbp-0x90]
+     f1e:	48 89 ce             	mov    rsi,rcx
+     f21:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+     f28:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+     f2f:	ff 
+     f30:	48 89 d7             	mov    rdi,rdx
+     f33:	e8 00 00 00 00       	call   f38 <solvePDE+0x3ff>
+
+		for (i = 0; i < 3; i++) {
+     f38:	c7 85 20 fe ff ff 00 	mov    DWORD PTR [rbp-0x1e0],0x0
+     f3f:	00 00 00 
+     f42:	e9 80 01 00 00       	jmp    10c7 <solvePDE+0x58e>
+			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+     f47:	8b 95 1c fe ff ff    	mov    edx,DWORD PTR [rbp-0x1e4]
+     f4d:	89 d0                	mov    eax,edx
+     f4f:	01 c0                	add    eax,eax
+     f51:	01 d0                	add    eax,edx
+     f53:	48 63 d0             	movsxd rdx,eax
+     f56:	8b 85 20 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1e0]
+     f5c:	48 98                	cdqe   
+     f5e:	48 01 d0             	add    rax,rdx
+     f61:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     f68:	00 
+     f69:	48 8b 85 70 fe ff ff 	mov    rax,QWORD PTR [rbp-0x190]
+     f70:	48 01 d0             	add    rax,rdx
+     f73:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+     f77:	f2 0f 2c c0          	cvttsd2si eax,xmm0
+     f7b:	83 e8 01             	sub    eax,0x1
+     f7e:	89 85 30 fe ff ff    	mov    DWORD PTR [rbp-0x1d0],eax
+#pragma omp critical
+			b[globalVertex] += localB[i];
+     f84:	8b 85 30 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d0]
+     f8a:	48 98                	cdqe   
+     f8c:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+     f93:	00 
+     f94:	48 8b 85 a0 fe ff ff 	mov    rax,QWORD PTR [rbp-0x160]
+     f9b:	48 01 c2             	add    rdx,rax
+     f9e:	8b 85 30 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d0]
+     fa4:	48 98                	cdqe   
+     fa6:	48 8d 0c c5 00 00 00 	lea    rcx,[rax*8+0x0]
+     fad:	00 
+     fae:	48 8b 85 a0 fe ff ff 	mov    rax,QWORD PTR [rbp-0x160]
+     fb5:	48 01 c8             	add    rax,rcx
+     fb8:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+     fbc:	8b 85 20 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1e0]
+     fc2:	48 98                	cdqe   
+     fc4:	f2 0f 10 84 c5 50 ff 	movsd  xmm0,QWORD PTR [rbp+rax*8-0xb0]
+     fcb:	ff ff 
+     fcd:	f2 0f 58 c1          	addsd  xmm0,xmm1
+     fd1:	f2 0f 11 02          	movsd  QWORD PTR [rdx],xmm0
+			for (j = 0; j < 3; j++) {
+     fd5:	c7 85 24 fe ff ff 00 	mov    DWORD PTR [rbp-0x1dc],0x0
+     fdc:	00 00 00 
+     fdf:	e9 cf 00 00 00       	jmp    10b3 <solvePDE+0x57a>
+				globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1;
+     fe4:	8b 95 1c fe ff ff    	mov    edx,DWORD PTR [rbp-0x1e4]
+     fea:	89 d0                	mov    eax,edx
+     fec:	01 c0                	add    eax,eax
+     fee:	01 d0                	add    eax,edx
+     ff0:	48 63 d0             	movsxd rdx,eax
+     ff3:	8b 85 24 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1dc]
+     ff9:	48 98                	cdqe   
+     ffb:	48 01 d0             	add    rax,rdx
+     ffe:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+    1005:	00 
+    1006:	48 8b 85 70 fe ff ff 	mov    rax,QWORD PTR [rbp-0x190]
+    100d:	48 01 d0             	add    rax,rdx
+    1010:	f2 0f 10 00          	movsd  xmm0,QWORD PTR [rax]
+    1014:	f2 0f 2c c0          	cvttsd2si eax,xmm0
+    1018:	83 e8 01             	sub    eax,0x1
+    101b:	89 85 34 fe ff ff    	mov    DWORD PTR [rbp-0x1cc],eax
+#pragma omp critical
+				*(w + globalVertex * meshSize + globalVertex2) += localW[i][j];
+    1021:	8b 85 30 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d0]
+    1027:	0f af 85 2c fe ff ff 	imul   eax,DWORD PTR [rbp-0x1d4]
+    102e:	48 63 d0             	movsxd rdx,eax
+    1031:	8b 85 34 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1cc]
+    1037:	48 98                	cdqe   
+    1039:	48 01 d0             	add    rax,rdx
+    103c:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+    1043:	00 
+    1044:	48 8b 85 98 fe ff ff 	mov    rax,QWORD PTR [rbp-0x168]
+    104b:	48 8d 0c 02          	lea    rcx,[rdx+rax*1]
+    104f:	8b 85 30 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d0]
+    1055:	0f af 85 2c fe ff ff 	imul   eax,DWORD PTR [rbp-0x1d4]
+    105c:	48 63 d0             	movsxd rdx,eax
+    105f:	8b 85 34 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1cc]
+    1065:	48 98                	cdqe   
+    1067:	48 01 d0             	add    rax,rdx
+    106a:	48 8d 14 c5 00 00 00 	lea    rdx,[rax*8+0x0]
+    1071:	00 
+    1072:	48 8b 85 98 fe ff ff 	mov    rax,QWORD PTR [rbp-0x168]
+    1079:	48 01 d0             	add    rax,rdx
+    107c:	f2 0f 10 08          	movsd  xmm1,QWORD PTR [rax]
+    1080:	8b 85 24 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1dc]
+    1086:	48 63 f0             	movsxd rsi,eax
+    1089:	8b 85 20 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1e0]
+    108f:	48 63 d0             	movsxd rdx,eax
+    1092:	48 89 d0             	mov    rax,rdx
+    1095:	48 01 c0             	add    rax,rax
+    1098:	48 01 d0             	add    rax,rdx
+    109b:	48 01 f0             	add    rax,rsi
+    109e:	f2 0f 10 44 c5 a0    	movsd  xmm0,QWORD PTR [rbp+rax*8-0x60]
+    10a4:	f2 0f 58 c1          	addsd  xmm0,xmm1
+    10a8:	f2 0f 11 01          	movsd  QWORD PTR [rcx],xmm0
+
+		for (i = 0; i < 3; i++) {
+			globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+#pragma omp critical
+			b[globalVertex] += localB[i];
+			for (j = 0; j < 3; j++) {
+    10ac:	83 85 24 fe ff ff 01 	add    DWORD PTR [rbp-0x1dc],0x1
+    10b3:	83 bd 24 fe ff ff 02 	cmp    DWORD PTR [rbp-0x1dc],0x2
+    10ba:	0f 8e 24 ff ff ff    	jle    fe4 <solvePDE+0x4ab>
+		}
+
+		localStiffnessMatrix(vertices, localW);
+		localVector(vertices, f, localB);
+
+		for (i = 0; i < 3; i++) {
+    10c0:	83 85 20 fe ff ff 01 	add    DWORD PTR [rbp-0x1e0],0x1
+    10c7:	83 bd 20 fe ff ff 02 	cmp    DWORD PTR [rbp-0x1e0],0x2
+    10ce:	0f 8e 73 fe ff ff    	jle    f47 <solvePDE+0x40e>
+
+	/* Assembling: START */
+	double startComputation = omp_get_wtime();
+	clock_t startComputationCPU = clock();
+#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2, vertices, localW, localB) schedule(dynamic)
+	for (tri = 0; tri < vertexSize; tri++) {
+    10d4:	83 85 1c fe ff ff 01 	add    DWORD PTR [rbp-0x1e4],0x1
+    10db:	8b 85 1c fe ff ff    	mov    eax,DWORD PTR [rbp-0x1e4]
+    10e1:	3b 85 28 fe ff ff    	cmp    eax,DWORD PTR [rbp-0x1d8]
+    10e7:	0f 8c 37 fd ff ff    	jl     e24 <solvePDE+0x2eb>
+#pragma omp critical
+				*(w + globalVertex * meshSize + globalVertex2) += localW[i][j];
+			}
+		}
+	}
+	double assemblingTime = omp_get_wtime() - startComputation;
+    10ed:	e8 00 00 00 00       	call   10f2 <solvePDE+0x5b9>
+    10f2:	f2 0f 5c 85 b8 fe ff 	subsd  xmm0,QWORD PTR [rbp-0x148]
+    10f9:	ff 
+    10fa:	f2 0f 11 85 c8 fe ff 	movsd  QWORD PTR [rbp-0x138],xmm0
+    1101:	ff 
+	double assemblingTimeCPU = ((double) (clock() - startComputationCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
+    1102:	e8 00 00 00 00       	call   1107 <solvePDE+0x5ce>
+    1107:	48 2b 85 c0 fe ff ff 	sub    rax,QWORD PTR [rbp-0x140]
+    110e:	f2 48 0f 2a c0       	cvtsi2sd xmm0,rax
+    1113:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # 111b <solvePDE+0x5e2>
+    111a:	00 
+    111b:	f2 0f 5e c1          	divsd  xmm0,xmm1
+    111f:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    1126:	ff 
+    1127:	e8 00 00 00 00       	call   112c <solvePDE+0x5f3>
+    112c:	f2 0f 2a c0          	cvtsi2sd xmm0,eax
+    1130:	f2 0f 10 a5 f0 fd ff 	movsd  xmm4,QWORD PTR [rbp-0x210]
+    1137:	ff 
+    1138:	f2 0f 5e e0          	divsd  xmm4,xmm0
+    113c:	66 0f 28 c4          	movapd xmm0,xmm4
+    1140:	f2 0f 11 85 d0 fe ff 	movsd  QWORD PTR [rbp-0x130],xmm0
+    1147:	ff 
+	/* Assembling: END */
+
+	/* Dirichlet condition: START */
+	double startDirichlet = omp_get_wtime();
+    1148:	e8 00 00 00 00       	call   114d <solvePDE+0x614>
+    114d:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    1154:	ff 
+    1155:	48 8b 85 f0 fd ff ff 	mov    rax,QWORD PTR [rbp-0x210]
+    115c:	48 89 85 d8 fe ff ff 	mov    QWORD PTR [rbp-0x128],rax
+	clock_t startDirichletCPU = clock();
+    1163:	e8 00 00 00 00       	call   1168 <solvePDE+0x62f>
+    1168:	48 89 85 e0 fe ff ff 	mov    QWORD PTR [rbp-0x120],rax
+	assignDirichletCondition(meshSize, g, meshPoints, w, b);
+    116f:	48 8b 8d a0 fe ff ff 	mov    rcx,QWORD PTR [rbp-0x160]
+    1176:	48 8b 95 98 fe ff ff 	mov    rdx,QWORD PTR [rbp-0x168]
+    117d:	48 8b b5 68 fe ff ff 	mov    rsi,QWORD PTR [rbp-0x198]
+    1184:	48 8b 85 40 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1c0]
+    118b:	8b bd 2c fe ff ff    	mov    edi,DWORD PTR [rbp-0x1d4]
+    1191:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    1198:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    119f:	ff 
+    11a0:	e8 00 00 00 00       	call   11a5 <solvePDE+0x66c>
+	double dirichletTime = omp_get_wtime() - startDirichlet;
+    11a5:	e8 00 00 00 00       	call   11aa <solvePDE+0x671>
+    11aa:	f2 0f 5c 85 d8 fe ff 	subsd  xmm0,QWORD PTR [rbp-0x128]
+    11b1:	ff 
+    11b2:	f2 0f 11 85 e8 fe ff 	movsd  QWORD PTR [rbp-0x118],xmm0
+    11b9:	ff 
+	double dirichletTimeCPU = ((double) (clock() - startDirichletCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
+    11ba:	e8 00 00 00 00       	call   11bf <solvePDE+0x686>
+    11bf:	48 2b 85 e0 fe ff ff 	sub    rax,QWORD PTR [rbp-0x120]
+    11c6:	f2 48 0f 2a c0       	cvtsi2sd xmm0,rax
+    11cb:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # 11d3 <solvePDE+0x69a>
+    11d2:	00 
+    11d3:	f2 0f 5e c1          	divsd  xmm0,xmm1
+    11d7:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    11de:	ff 
+    11df:	e8 00 00 00 00       	call   11e4 <solvePDE+0x6ab>
+    11e4:	f2 0f 2a c0          	cvtsi2sd xmm0,eax
+    11e8:	f2 0f 10 ad f0 fd ff 	movsd  xmm5,QWORD PTR [rbp-0x210]
+    11ef:	ff 
+    11f0:	f2 0f 5e e8          	divsd  xmm5,xmm0
+    11f4:	66 0f 28 c5          	movapd xmm0,xmm5
+    11f8:	f2 0f 11 85 f0 fe ff 	movsd  QWORD PTR [rbp-0x110],xmm0
+    11ff:	ff 
+	/* Dirichlet condition: END */
+
+	/* Gaussian Elimination: START */
+	double startGauss = omp_get_wtime();
+    1200:	e8 00 00 00 00       	call   1205 <solvePDE+0x6cc>
+    1205:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    120c:	ff 
+    120d:	48 8b 85 f0 fd ff ff 	mov    rax,QWORD PTR [rbp-0x210]
+    1214:	48 89 85 f8 fe ff ff 	mov    QWORD PTR [rbp-0x108],rax
+	clock_t startGaussCPU = clock();
+    121b:	e8 00 00 00 00       	call   1220 <solvePDE+0x6e7>
+    1220:	48 89 85 00 ff ff ff 	mov    QWORD PTR [rbp-0x100],rax
+	gaussianElimination(meshSize, w, b);
+    1227:	48 8b 95 a0 fe ff ff 	mov    rdx,QWORD PTR [rbp-0x160]
+    122e:	48 8b 8d 98 fe ff ff 	mov    rcx,QWORD PTR [rbp-0x168]
+    1235:	8b 85 2c fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d4]
+    123b:	48 89 ce             	mov    rsi,rcx
+    123e:	89 c7                	mov    edi,eax
+    1240:	e8 00 00 00 00       	call   1245 <solvePDE+0x70c>
+	double gaussTime = omp_get_wtime() - startGauss;
+    1245:	e8 00 00 00 00       	call   124a <solvePDE+0x711>
+    124a:	f2 0f 5c 85 f8 fe ff 	subsd  xmm0,QWORD PTR [rbp-0x108]
+    1251:	ff 
+    1252:	f2 0f 11 85 08 ff ff 	movsd  QWORD PTR [rbp-0xf8],xmm0
+    1259:	ff 
+	double gaussTimeCPU = ((double) (clock() - startGaussCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
+    125a:	e8 00 00 00 00       	call   125f <solvePDE+0x726>
+    125f:	48 2b 85 00 ff ff ff 	sub    rax,QWORD PTR [rbp-0x100]
+    1266:	f2 48 0f 2a c0       	cvtsi2sd xmm0,rax
+    126b:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # 1273 <solvePDE+0x73a>
+    1272:	00 
+    1273:	f2 0f 5e c1          	divsd  xmm0,xmm1
+    1277:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    127e:	ff 
+    127f:	e8 00 00 00 00       	call   1284 <solvePDE+0x74b>
+    1284:	f2 0f 2a c0          	cvtsi2sd xmm0,eax
+    1288:	f2 0f 10 b5 f0 fd ff 	movsd  xmm6,QWORD PTR [rbp-0x210]
+    128f:	ff 
+    1290:	f2 0f 5e f0          	divsd  xmm6,xmm0
+    1294:	66 0f 28 c6          	movapd xmm0,xmm6
+    1298:	f2 0f 11 85 10 ff ff 	movsd  QWORD PTR [rbp-0xf0],xmm0
+    129f:	ff 
+	/* Gaussian Elimination: END */
+
+	/* Backward Substitution: START */
+	double startBack = omp_get_wtime();
+    12a0:	e8 00 00 00 00       	call   12a5 <solvePDE+0x76c>
+    12a5:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    12ac:	ff 
+    12ad:	48 8b 85 f0 fd ff ff 	mov    rax,QWORD PTR [rbp-0x210]
+    12b4:	48 89 85 18 ff ff ff 	mov    QWORD PTR [rbp-0xe8],rax
+	clock_t startBackCPU = clock();
+    12bb:	e8 00 00 00 00       	call   12c0 <solvePDE+0x787>
+    12c0:	48 89 85 20 ff ff ff 	mov    QWORD PTR [rbp-0xe0],rax
+	double* u = backSubstitution(meshSize, w, b);
+    12c7:	48 8b 95 a0 fe ff ff 	mov    rdx,QWORD PTR [rbp-0x160]
+    12ce:	48 8b 8d 98 fe ff ff 	mov    rcx,QWORD PTR [rbp-0x168]
+    12d5:	8b 85 2c fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d4]
+    12db:	48 89 ce             	mov    rsi,rcx
+    12de:	89 c7                	mov    edi,eax
+    12e0:	e8 00 00 00 00       	call   12e5 <solvePDE+0x7ac>
+    12e5:	48 89 85 28 ff ff ff 	mov    QWORD PTR [rbp-0xd8],rax
+	double backTime = omp_get_wtime() - startBack;
+    12ec:	e8 00 00 00 00       	call   12f1 <solvePDE+0x7b8>
+    12f1:	f2 0f 5c 85 18 ff ff 	subsd  xmm0,QWORD PTR [rbp-0xe8]
+    12f8:	ff 
+    12f9:	f2 0f 11 85 30 ff ff 	movsd  QWORD PTR [rbp-0xd0],xmm0
+    1300:	ff 
+	double backTimeCPU = ((double) (clock() - startBackCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
+    1301:	e8 00 00 00 00       	call   1306 <solvePDE+0x7cd>
+    1306:	48 2b 85 20 ff ff ff 	sub    rax,QWORD PTR [rbp-0xe0]
+    130d:	f2 48 0f 2a c0       	cvtsi2sd xmm0,rax
+    1312:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # 131a <solvePDE+0x7e1>
+    1319:	00 
+    131a:	f2 0f 5e c1          	divsd  xmm0,xmm1
+    131e:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    1325:	ff 
+    1326:	e8 00 00 00 00       	call   132b <solvePDE+0x7f2>
+    132b:	f2 0f 2a c0          	cvtsi2sd xmm0,eax
+    132f:	f2 0f 10 bd f0 fd ff 	movsd  xmm7,QWORD PTR [rbp-0x210]
+    1336:	ff 
+    1337:	f2 0f 5e f8          	divsd  xmm7,xmm0
+    133b:	66 0f 28 c7          	movapd xmm0,xmm7
+    133f:	f2 0f 11 85 38 ff ff 	movsd  QWORD PTR [rbp-0xc8],xmm0
+    1346:	ff 
+	/* Backward Substitution: END */
+
+	double computationTime = omp_get_wtime() - startComputation;
+    1347:	e8 00 00 00 00       	call   134c <solvePDE+0x813>
+    134c:	f2 0f 5c 85 b8 fe ff 	subsd  xmm0,QWORD PTR [rbp-0x148]
+    1353:	ff 
+    1354:	f2 0f 11 85 40 ff ff 	movsd  QWORD PTR [rbp-0xc0],xmm0
+    135b:	ff 
+	double computationTimeCPU = ((double) (clock() - startComputationCPU) / CLOCKS_PER_SEC) / omp_get_max_threads();
+    135c:	e8 00 00 00 00       	call   1361 <solvePDE+0x828>
+    1361:	48 2b 85 c0 fe ff ff 	sub    rax,QWORD PTR [rbp-0x140]
+    1368:	f2 48 0f 2a c0       	cvtsi2sd xmm0,rax
+    136d:	f2 0f 10 0d 00 00 00 	movsd  xmm1,QWORD PTR [rip+0x0]        # 1375 <solvePDE+0x83c>
+    1374:	00 
+    1375:	f2 0f 5e c1          	divsd  xmm0,xmm1
+    1379:	f2 0f 11 85 f0 fd ff 	movsd  QWORD PTR [rbp-0x210],xmm0
+    1380:	ff 
+    1381:	e8 00 00 00 00       	call   1386 <solvePDE+0x84d>
+    1386:	f2 0f 2a c0          	cvtsi2sd xmm0,eax
+    138a:	f2 0f 10 95 f0 fd ff 	movsd  xmm2,QWORD PTR [rbp-0x210]
+    1391:	ff 
+    1392:	f2 0f 5e d0          	divsd  xmm2,xmm0
+    1396:	66 0f 28 c2          	movapd xmm0,xmm2
+    139a:	f2 0f 11 85 48 ff ff 	movsd  QWORD PTR [rbp-0xb8],xmm0
+    13a1:	ff 
+	/* Computation: END */
+
+	printf("Vertex number: %d.\n", meshSize);
+    13a2:	8b 85 2c fe ff ff    	mov    eax,DWORD PTR [rbp-0x1d4]
+    13a8:	89 c6                	mov    esi,eax
+    13aa:	bf 00 00 00 00       	mov    edi,0x0
+    13af:	b8 00 00 00 00       	mov    eax,0x0
+    13b4:	e8 00 00 00 00       	call   13b9 <solvePDE+0x880>
+	printf("Elapsed time for computation: %lf seconds.\n", computationTime);
+    13b9:	48 8b 85 40 ff ff ff 	mov    rax,QWORD PTR [rbp-0xc0]
+    13c0:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    13c7:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    13ce:	ff 
+    13cf:	bf 00 00 00 00       	mov    edi,0x0
+    13d4:	b8 01 00 00 00       	mov    eax,0x1
+    13d9:	e8 00 00 00 00       	call   13de <solvePDE+0x8a5>
+	printf("Elapsed time for computation in CPU: %lf seconds.\n", computationTimeCPU);
+    13de:	48 8b 85 48 ff ff ff 	mov    rax,QWORD PTR [rbp-0xb8]
+    13e5:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    13ec:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    13f3:	ff 
+    13f4:	bf 00 00 00 00       	mov    edi,0x0
+    13f9:	b8 01 00 00 00       	mov    eax,0x1
+    13fe:	e8 00 00 00 00       	call   1403 <solvePDE+0x8ca>
+	printf("Elapsed time for IO: %lf seconds.\n", ioTime);
+    1403:	48 8b 85 78 fe ff ff 	mov    rax,QWORD PTR [rbp-0x188]
+    140a:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    1411:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    1418:	ff 
+    1419:	bf 00 00 00 00       	mov    edi,0x0
+    141e:	b8 01 00 00 00       	mov    eax,0x1
+    1423:	e8 00 00 00 00       	call   1428 <solvePDE+0x8ef>
+	printf("Elapsed time for IO in CPU: %lf seconds.\n", ioTimeCPU);
+    1428:	48 8b 85 80 fe ff ff 	mov    rax,QWORD PTR [rbp-0x180]
+    142f:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    1436:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    143d:	ff 
+    143e:	bf 00 00 00 00       	mov    edi,0x0
+    1443:	b8 01 00 00 00       	mov    eax,0x1
+    1448:	e8 00 00 00 00       	call   144d <solvePDE+0x914>
+	printf("Elapsed time for zeros: %lf seconds.\n", zerosTime);
+    144d:	48 8b 85 a8 fe ff ff 	mov    rax,QWORD PTR [rbp-0x158]
+    1454:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    145b:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    1462:	ff 
+    1463:	bf 00 00 00 00       	mov    edi,0x0
+    1468:	b8 01 00 00 00       	mov    eax,0x1
+    146d:	e8 00 00 00 00       	call   1472 <solvePDE+0x939>
+	printf("Elapsed time for zeros in CPU: %lf seconds.\n", zerosTimeCPU);
+    1472:	48 8b 85 b0 fe ff ff 	mov    rax,QWORD PTR [rbp-0x150]
+    1479:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    1480:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    1487:	ff 
+    1488:	bf 00 00 00 00       	mov    edi,0x0
+    148d:	b8 01 00 00 00       	mov    eax,0x1
+    1492:	e8 00 00 00 00       	call   1497 <solvePDE+0x95e>
+	printf("Elapsed time for assembling: %lf seconds.\n", assemblingTime);
+    1497:	48 8b 85 c8 fe ff ff 	mov    rax,QWORD PTR [rbp-0x138]
+    149e:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    14a5:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    14ac:	ff 
+    14ad:	bf 00 00 00 00       	mov    edi,0x0
+    14b2:	b8 01 00 00 00       	mov    eax,0x1
+    14b7:	e8 00 00 00 00       	call   14bc <solvePDE+0x983>
+	printf("Elapsed time for assembling in CPU: %lf seconds.\n", assemblingTimeCPU);
+    14bc:	48 8b 85 d0 fe ff ff 	mov    rax,QWORD PTR [rbp-0x130]
+    14c3:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    14ca:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    14d1:	ff 
+    14d2:	bf 00 00 00 00       	mov    edi,0x0
+    14d7:	b8 01 00 00 00       	mov    eax,0x1
+    14dc:	e8 00 00 00 00       	call   14e1 <solvePDE+0x9a8>
+	printf("Elapsed time for dirichlet: %lf seconds.\n", dirichletTime);
+    14e1:	48 8b 85 e8 fe ff ff 	mov    rax,QWORD PTR [rbp-0x118]
+    14e8:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    14ef:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    14f6:	ff 
+    14f7:	bf 00 00 00 00       	mov    edi,0x0
+    14fc:	b8 01 00 00 00       	mov    eax,0x1
+    1501:	e8 00 00 00 00       	call   1506 <solvePDE+0x9cd>
+	printf("Elapsed time for dirichlet in CPU: %lf seconds.\n", dirichletTimeCPU);
+    1506:	48 8b 85 f0 fe ff ff 	mov    rax,QWORD PTR [rbp-0x110]
+    150d:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    1514:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    151b:	ff 
+    151c:	bf 00 00 00 00       	mov    edi,0x0
+    1521:	b8 01 00 00 00       	mov    eax,0x1
+    1526:	e8 00 00 00 00       	call   152b <solvePDE+0x9f2>
+	printf("Elapsed time for gaussian elimination: %lf seconds.\n", gaussTime);
+    152b:	48 8b 85 08 ff ff ff 	mov    rax,QWORD PTR [rbp-0xf8]
+    1532:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    1539:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    1540:	ff 
+    1541:	bf 00 00 00 00       	mov    edi,0x0
+    1546:	b8 01 00 00 00       	mov    eax,0x1
+    154b:	e8 00 00 00 00       	call   1550 <solvePDE+0xa17>
+	printf("Elapsed time for gaussian elimination in CPU: %lf seconds.\n", gaussTimeCPU);
+    1550:	48 8b 85 10 ff ff ff 	mov    rax,QWORD PTR [rbp-0xf0]
+    1557:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    155e:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    1565:	ff 
+    1566:	bf 00 00 00 00       	mov    edi,0x0
+    156b:	b8 01 00 00 00       	mov    eax,0x1
+    1570:	e8 00 00 00 00       	call   1575 <solvePDE+0xa3c>
+	printf("Elapsed time for back substitution: %lf seconds.\n", backTime);
+    1575:	48 8b 85 30 ff ff ff 	mov    rax,QWORD PTR [rbp-0xd0]
+    157c:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    1583:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    158a:	ff 
+    158b:	bf 00 00 00 00       	mov    edi,0x0
+    1590:	b8 01 00 00 00       	mov    eax,0x1
+    1595:	e8 00 00 00 00       	call   159a <solvePDE+0xa61>
+	printf("Elapsed time for back substitution in CPU: %lf seconds.\n", backTimeCPU);
+    159a:	48 8b 85 38 ff ff ff 	mov    rax,QWORD PTR [rbp-0xc8]
+    15a1:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    15a8:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    15af:	ff 
+    15b0:	bf 00 00 00 00       	mov    edi,0x0
+    15b5:	b8 01 00 00 00       	mov    eax,0x1
+    15ba:	e8 00 00 00 00       	call   15bf <solvePDE+0xa86>
+
+	fprintf(result, "%d; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf; %lf\n", meshSize, computationTime, ioTime, zerosTime, assemblingTime, dirichletTime, gaussTime, backTime, computationTimeCPU, ioTimeCPU, zerosTimeCPU, assemblingTimeCPU, dirichletTimeCPU, gaussTimeCPU, backTimeCPU);
+    15bf:	4c 8b 95 48 ff ff ff 	mov    r10,QWORD PTR [rbp-0xb8]
+    15c6:	4c 8b 8d 30 ff ff ff 	mov    r9,QWORD PTR [rbp-0xd0]
+    15cd:	4c 8b 85 08 ff ff ff 	mov    r8,QWORD PTR [rbp-0xf8]
+    15d4:	48 8b bd e8 fe ff ff 	mov    rdi,QWORD PTR [rbp-0x118]
+    15db:	48 8b b5 c8 fe ff ff 	mov    rsi,QWORD PTR [rbp-0x138]
+    15e2:	48 8b 8d a8 fe ff ff 	mov    rcx,QWORD PTR [rbp-0x158]
+    15e9:	48 8b 95 78 fe ff ff 	mov    rdx,QWORD PTR [rbp-0x188]
+    15f0:	48 8b 85 40 ff ff ff 	mov    rax,QWORD PTR [rbp-0xc0]
+    15f7:	44 8b a5 2c fe ff ff 	mov    r12d,DWORD PTR [rbp-0x1d4]
+    15fe:	48 8b 9d f8 fd ff ff 	mov    rbx,QWORD PTR [rbp-0x208]
+    1605:	4c 8b 9d 38 ff ff ff 	mov    r11,QWORD PTR [rbp-0xc8]
+    160c:	4c 89 5c 24 28       	mov    QWORD PTR [rsp+0x28],r11
+    1611:	4c 8b 9d 10 ff ff ff 	mov    r11,QWORD PTR [rbp-0xf0]
+    1618:	4c 89 5c 24 20       	mov    QWORD PTR [rsp+0x20],r11
+    161d:	4c 8b 9d f0 fe ff ff 	mov    r11,QWORD PTR [rbp-0x110]
+    1624:	4c 89 5c 24 18       	mov    QWORD PTR [rsp+0x18],r11
+    1629:	4c 8b 9d d0 fe ff ff 	mov    r11,QWORD PTR [rbp-0x130]
+    1630:	4c 89 5c 24 10       	mov    QWORD PTR [rsp+0x10],r11
+    1635:	4c 8b 9d b0 fe ff ff 	mov    r11,QWORD PTR [rbp-0x150]
+    163c:	4c 89 5c 24 08       	mov    QWORD PTR [rsp+0x8],r11
+    1641:	4c 8b 9d 80 fe ff ff 	mov    r11,QWORD PTR [rbp-0x180]
+    1648:	4c 89 1c 24          	mov    QWORD PTR [rsp],r11
+    164c:	4c 89 95 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],r10
+    1653:	f2 0f 10 bd f0 fd ff 	movsd  xmm7,QWORD PTR [rbp-0x210]
+    165a:	ff 
+    165b:	4c 89 8d f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],r9
+    1662:	f2 0f 10 b5 f0 fd ff 	movsd  xmm6,QWORD PTR [rbp-0x210]
+    1669:	ff 
+    166a:	4c 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],r8
+    1671:	f2 0f 10 ad f0 fd ff 	movsd  xmm5,QWORD PTR [rbp-0x210]
+    1678:	ff 
+    1679:	48 89 bd f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rdi
+    1680:	f2 0f 10 a5 f0 fd ff 	movsd  xmm4,QWORD PTR [rbp-0x210]
+    1687:	ff 
+    1688:	48 89 b5 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rsi
+    168f:	f2 0f 10 9d f0 fd ff 	movsd  xmm3,QWORD PTR [rbp-0x210]
+    1696:	ff 
+    1697:	48 89 8d f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rcx
+    169e:	f2 0f 10 95 f0 fd ff 	movsd  xmm2,QWORD PTR [rbp-0x210]
+    16a5:	ff 
+    16a6:	48 89 95 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rdx
+    16ad:	f2 0f 10 8d f0 fd ff 	movsd  xmm1,QWORD PTR [rbp-0x210]
+    16b4:	ff 
+    16b5:	48 89 85 f0 fd ff ff 	mov    QWORD PTR [rbp-0x210],rax
+    16bc:	f2 0f 10 85 f0 fd ff 	movsd  xmm0,QWORD PTR [rbp-0x210]
+    16c3:	ff 
+    16c4:	44 89 e2             	mov    edx,r12d
+    16c7:	be 00 00 00 00       	mov    esi,0x0
+    16cc:	48 89 df             	mov    rdi,rbx
+    16cf:	b8 08 00 00 00       	mov    eax,0x8
+    16d4:	e8 00 00 00 00       	call   16d9 <solvePDE+0xba0>
+
+	fclose(meshFile);
+    16d9:	48 8b 85 48 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b8]
+    16e0:	48 89 c7             	mov    rdi,rax
+    16e3:	e8 00 00 00 00       	call   16e8 <solvePDE+0xbaf>
+	fclose(vertexFile);
+    16e8:	48 8b 85 50 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b0]
+    16ef:	48 89 c7             	mov    rdi,rax
+    16f2:	e8 00 00 00 00       	call   16f7 <solvePDE+0xbbe>
+	free(meshPoints);
+    16f7:	48 8b 85 68 fe ff ff 	mov    rax,QWORD PTR [rbp-0x198]
+    16fe:	48 89 c7             	mov    rdi,rax
+    1701:	e8 00 00 00 00       	call   1706 <solvePDE+0xbcd>
+	free(vertexNumbers);
+    1706:	48 8b 85 70 fe ff ff 	mov    rax,QWORD PTR [rbp-0x190]
+    170d:	48 89 c7             	mov    rdi,rax
+    1710:	e8 00 00 00 00       	call   1715 <solvePDE+0xbdc>
+	free(w);
+    1715:	48 8b 85 98 fe ff ff 	mov    rax,QWORD PTR [rbp-0x168]
+    171c:	48 89 c7             	mov    rdi,rax
+    171f:	e8 00 00 00 00       	call   1724 <solvePDE+0xbeb>
+	free(b);
+    1724:	48 8b 85 a0 fe ff ff 	mov    rax,QWORD PTR [rbp-0x160]
+    172b:	48 89 c7             	mov    rdi,rax
+    172e:	e8 00 00 00 00       	call   1733 <solvePDE+0xbfa>
+	free(u);
+    1733:	48 8b 85 28 ff ff ff 	mov    rax,QWORD PTR [rbp-0xd8]
+    173a:	48 89 c7             	mov    rdi,rax
+    173d:	e8 00 00 00 00       	call   1742 <solvePDE+0xc09>
+
+	return u;
+    1742:	48 8b 85 28 ff ff ff 	mov    rax,QWORD PTR [rbp-0xd8]
+}
+    1749:	48 81 c4 30 02 00 00 	add    rsp,0x230
+    1750:	5b                   	pop    rbx
+    1751:	41 5c                	pop    r12
+    1753:	5d                   	pop    rbp
+    1754:	c3                   	ret    
+
+0000000000001755 <main>:
+
+int main(int argc, char **argv) {
+    1755:	55                   	push   rbp
+    1756:	48 89 e5             	mov    rbp,rsp
+    1759:	53                   	push   rbx
+    175a:	48 81 ec c8 01 00 00 	sub    rsp,0x1c8
+    1761:	89 bd 3c fe ff ff    	mov    DWORD PTR [rbp-0x1c4],edi
+    1767:	48 89 b5 30 fe ff ff 	mov    QWORD PTR [rbp-0x1d0],rsi
+    176e:	64 48 8b 04 25 28 00 	mov    rax,QWORD PTR fs:0x28
+    1775:	00 00 
+    1777:	48 89 45 e8          	mov    QWORD PTR [rbp-0x18],rax
+    177b:	31 c0                	xor    eax,eax
+
+	int i;
+	char dirP[50] = "data/p";
+    177d:	48 b8 64 61 74 61 2f 	movabs rax,0x702f61746164
+    1784:	70 00 00 
+    1787:	48 89 85 50 fe ff ff 	mov    QWORD PTR [rbp-0x1b0],rax
+    178e:	48 8d 95 58 fe ff ff 	lea    rdx,[rbp-0x1a8]
+    1795:	b8 00 00 00 00       	mov    eax,0x0
+    179a:	b9 05 00 00 00       	mov    ecx,0x5
+    179f:	48 89 d7             	mov    rdi,rdx
+    17a2:	f3 48 ab             	rep stos QWORD PTR es:[rdi],rax
+    17a5:	48 89 fa             	mov    rdx,rdi
+    17a8:	66 89 02             	mov    WORD PTR [rdx],ax
+    17ab:	48 83 c2 02          	add    rdx,0x2
+	char dirT[50] = "data/t";
+    17af:	48 b8 64 61 74 61 2f 	movabs rax,0x742f61746164
+    17b6:	74 00 00 
+    17b9:	48 89 85 90 fe ff ff 	mov    QWORD PTR [rbp-0x170],rax
+    17c0:	48 8d 95 98 fe ff ff 	lea    rdx,[rbp-0x168]
+    17c7:	b8 00 00 00 00       	mov    eax,0x0
+    17cc:	b9 05 00 00 00       	mov    ecx,0x5
+    17d1:	48 89 d7             	mov    rdi,rdx
+    17d4:	f3 48 ab             	rep stos QWORD PTR es:[rdi],rax
+    17d7:	48 89 fa             	mov    rdx,rdi
+    17da:	66 89 02             	mov    WORD PTR [rdx],ax
+    17dd:	48 83 c2 02          	add    rdx,0x2
+	char extension[50] = ".csv";
+    17e1:	48 c7 85 d0 fe ff ff 	mov    QWORD PTR [rbp-0x130],0x7673632e
+    17e8:	2e 63 73 76 
+    17ec:	48 8d 95 d8 fe ff ff 	lea    rdx,[rbp-0x128]
+    17f3:	b8 00 00 00 00       	mov    eax,0x0
+    17f8:	b9 05 00 00 00       	mov    ecx,0x5
+    17fd:	48 89 d7             	mov    rdi,rdx
+    1800:	f3 48 ab             	rep stos QWORD PTR es:[rdi],rax
+    1803:	48 89 fa             	mov    rdx,rdi
+    1806:	66 89 02             	mov    WORD PTR [rdx],ax
+    1809:	48 83 c2 02          	add    rdx,0x2
+	char fileP[100];
+	char fileT[100];
+	FILE* result;
+
+	if(argc != 3){
+    180d:	83 bd 3c fe ff ff 03 	cmp    DWORD PTR [rbp-0x1c4],0x3
+    1814:	74 14                	je     182a <main+0xd5>
+		printf("usage: ./pmain file_number parallel_flag\n");
+    1816:	bf 00 00 00 00       	mov    edi,0x0
+    181b:	e8 00 00 00 00       	call   1820 <main+0xcb>
+		return 1;
+    1820:	b8 01 00 00 00       	mov    eax,0x1
+    1825:	e9 8a 01 00 00       	jmp    19b4 <main+0x25f>
+	}
+
+	int files = atoi(argv[1]);
+    182a:	48 8b 85 30 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1d0]
+    1831:	48 83 c0 08          	add    rax,0x8
+    1835:	48 8b 00             	mov    rax,QWORD PTR [rax]
+    1838:	48 89 c7             	mov    rdi,rax
+    183b:	e8 00 00 00 00       	call   1840 <main+0xeb>
+    1840:	89 85 44 fe ff ff    	mov    DWORD PTR [rbp-0x1bc],eax
+
+	if(strcmp(argv[2], "-p") == 0){
+    1846:	48 8b 85 30 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1d0]
+    184d:	48 83 c0 10          	add    rax,0x10
+    1851:	48 8b 00             	mov    rax,QWORD PTR [rax]
+    1854:	be 00 00 00 00       	mov    esi,0x0
+    1859:	48 89 c7             	mov    rdi,rax
+    185c:	e8 00 00 00 00       	call   1861 <main+0x10c>
+    1861:	85 c0                	test   eax,eax
+    1863:	75 44                	jne    18a9 <main+0x154>
+		printf("Parallel option enabled...\n");
+    1865:	bf 00 00 00 00       	mov    edi,0x0
+    186a:	e8 00 00 00 00       	call   186f <main+0x11a>
+		printf("Running with %d threads...\n", omp_get_max_threads());
+    186f:	e8 00 00 00 00       	call   1874 <main+0x11f>
+    1874:	89 c6                	mov    esi,eax
+    1876:	bf 00 00 00 00       	mov    edi,0x0
+    187b:	b8 00 00 00 00       	mov    eax,0x0
+    1880:	e8 00 00 00 00       	call   1885 <main+0x130>
+		result = fopen("resParallel.csv", "w");
+    1885:	be 00 00 00 00       	mov    esi,0x0
+    188a:	bf 00 00 00 00       	mov    edi,0x0
+    188f:	e8 00 00 00 00       	call   1894 <main+0x13f>
+    1894:	48 89 85 48 fe ff ff 	mov    QWORD PTR [rbp-0x1b8],rax
+		omp_set_num_threads(omp_get_max_threads());
+    189b:	e8 00 00 00 00       	call   18a0 <main+0x14b>
+    18a0:	89 c7                	mov    edi,eax
+    18a2:	e8 00 00 00 00       	call   18a7 <main+0x152>
+    18a7:	eb 20                	jmp    18c9 <main+0x174>
+	} else {
+		omp_set_num_threads(1);
+    18a9:	bf 01 00 00 00       	mov    edi,0x1
+    18ae:	e8 00 00 00 00       	call   18b3 <main+0x15e>
+		result = fopen("resSerial.csv", "w");
+    18b3:	be 00 00 00 00       	mov    esi,0x0
+    18b8:	bf 00 00 00 00       	mov    edi,0x0
+    18bd:	e8 00 00 00 00       	call   18c2 <main+0x16d>
+    18c2:	48 89 85 48 fe ff ff 	mov    QWORD PTR [rbp-0x1b8],rax
+	}
+
+	fprintf(result, "meshSize; computationTime; ioTime; zerosTime; assemblingTime; dirichletTime; gaussTime; backTime; computationTimeCPU; ioTimeCPU; zerosTimeCPU; assemblingTimeCPU; dirichletTimeCPU; gaussTimeCPU; backTimeCPU\n");
+    18c9:	48 8b 85 48 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b8]
+    18d0:	48 89 c1             	mov    rcx,rax
+    18d3:	ba ce 00 00 00       	mov    edx,0xce
+    18d8:	be 01 00 00 00       	mov    esi,0x1
+    18dd:	bf 00 00 00 00       	mov    edi,0x0
+    18e2:	e8 00 00 00 00       	call   18e7 <main+0x192>
+
+	for (i = 0; i < files; i++) {
+    18e7:	c7 85 40 fe ff ff 00 	mov    DWORD PTR [rbp-0x1c0],0x0
+    18ee:	00 00 00 
+    18f1:	e9 98 00 00 00       	jmp    198e <main+0x239>
+		sprintf(fileP, "%s%d%s", dirP, i, extension);
+    18f6:	48 8d b5 d0 fe ff ff 	lea    rsi,[rbp-0x130]
+    18fd:	8b 8d 40 fe ff ff    	mov    ecx,DWORD PTR [rbp-0x1c0]
+    1903:	48 8d 95 50 fe ff ff 	lea    rdx,[rbp-0x1b0]
+    190a:	48 8d 85 10 ff ff ff 	lea    rax,[rbp-0xf0]
+    1911:	49 89 f0             	mov    r8,rsi
+    1914:	be 00 00 00 00       	mov    esi,0x0
+    1919:	48 89 c7             	mov    rdi,rax
+    191c:	b8 00 00 00 00       	mov    eax,0x0
+    1921:	e8 00 00 00 00       	call   1926 <main+0x1d1>
+		sprintf(fileT, "%s%d%s", dirT, i, extension);
+    1926:	48 8d b5 d0 fe ff ff 	lea    rsi,[rbp-0x130]
+    192d:	8b 8d 40 fe ff ff    	mov    ecx,DWORD PTR [rbp-0x1c0]
+    1933:	48 8d 95 90 fe ff ff 	lea    rdx,[rbp-0x170]
+    193a:	48 8d 45 80          	lea    rax,[rbp-0x80]
+    193e:	49 89 f0             	mov    r8,rsi
+    1941:	be 00 00 00 00       	mov    esi,0x0
+    1946:	48 89 c7             	mov    rdi,rax
+    1949:	b8 00 00 00 00       	mov    eax,0x0
+    194e:	e8 00 00 00 00       	call   1953 <main+0x1fe>
+		printf("Iteration %d\n", i);
+    1953:	8b 85 40 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1c0]
+    1959:	89 c6                	mov    esi,eax
+    195b:	bf 00 00 00 00       	mov    edi,0x0
+    1960:	b8 00 00 00 00       	mov    eax,0x0
+    1965:	e8 00 00 00 00       	call   196a <main+0x215>
+		solvePDE(fileP, fileT, result);
+    196a:	48 8b 95 48 fe ff ff 	mov    rdx,QWORD PTR [rbp-0x1b8]
+    1971:	48 8d 4d 80          	lea    rcx,[rbp-0x80]
+    1975:	48 8d 85 10 ff ff ff 	lea    rax,[rbp-0xf0]
+    197c:	48 89 ce             	mov    rsi,rcx
+    197f:	48 89 c7             	mov    rdi,rax
+    1982:	e8 00 00 00 00       	call   1987 <main+0x232>
+		result = fopen("resSerial.csv", "w");
+	}
+
+	fprintf(result, "meshSize; computationTime; ioTime; zerosTime; assemblingTime; dirichletTime; gaussTime; backTime; computationTimeCPU; ioTimeCPU; zerosTimeCPU; assemblingTimeCPU; dirichletTimeCPU; gaussTimeCPU; backTimeCPU\n");
+
+	for (i = 0; i < files; i++) {
+    1987:	83 85 40 fe ff ff 01 	add    DWORD PTR [rbp-0x1c0],0x1
+    198e:	8b 85 40 fe ff ff    	mov    eax,DWORD PTR [rbp-0x1c0]
+    1994:	3b 85 44 fe ff ff    	cmp    eax,DWORD PTR [rbp-0x1bc]
+    199a:	0f 8c 56 ff ff ff    	jl     18f6 <main+0x1a1>
+		sprintf(fileT, "%s%d%s", dirT, i, extension);
+		printf("Iteration %d\n", i);
+		solvePDE(fileP, fileT, result);
+	}
+
+	fclose(result);
+    19a0:	48 8b 85 48 fe ff ff 	mov    rax,QWORD PTR [rbp-0x1b8]
+    19a7:	48 89 c7             	mov    rdi,rax
+    19aa:	e8 00 00 00 00       	call   19af <main+0x25a>
+
+	return 0;
+    19af:	b8 00 00 00 00       	mov    eax,0x0
+}
+    19b4:	48 8b 5d e8          	mov    rbx,QWORD PTR [rbp-0x18]
+    19b8:	64 48 33 1c 25 28 00 	xor    rbx,QWORD PTR fs:0x28
+    19bf:	00 00 
+    19c1:	74 05                	je     19c8 <main+0x273>
+    19c3:	e8 00 00 00 00       	call   19c8 <main+0x273>
+    19c8:	48 81 c4 c8 01 00 00 	add    rsp,0x1c8
+    19cf:	5b                   	pop    rbx
+    19d0:	5d                   	pop    rbp
+    19d1:	c3                   	ret    

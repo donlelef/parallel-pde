@@ -5,11 +5,14 @@
 \textclass article
 \begin_preamble
 \usepackage[dvipsnames]{xcolor}
+\usepackage[bottom]{footmisc}
 \end_preamble
 \use_default_options true
 \begin_modules
 eqs-within-sections
 figs-within-sections
+tabs-within-sections
+logicalmkup
 \end_modules
 \maintain_unincluded_children false
 \language british
@@ -108,7 +111,23 @@ February
 \end_layout
 
 \begin_layout Abstract
-TODO
+The Finite Elements algorithm is implemented through a C program and applied
+ to an elliptic partial differential equation.
+ A serial version is run on several mesh with growing size.
+ The execution time is recorded and compared with theoretical prediction
+ based on computational complexity.
+ The results are coherent with the predictions.
+ Using OpenMP directives, the code is made parallel and run on different
+ machines.
+ For every major function, the time gain is predicted using Ahmdal's law
+ and then measured.
+ The results show an overall improvement of the performance, even if lower
+ than the theoretical limit.
+ Other ways to speed up the executions are explored: an automatic optimisation
+ of the machine code is tested.
+ The optimised code outperforms both the serial and the parallel versions:
+ an explanation is found looking to the improvement the compiler performs
+ on the assembly.
 \end_layout
 
 \begin_layout Standard
@@ -120,21 +139,28 @@ LatexCommand tableofcontents
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
-Introduction
+Partial differential equations and finite element methods.
 \end_layout
 
 \begin_layout Standard
 Partial differential equations (PDE) are differential equations where the
  unknown is a multivariable function.
- Far from being just complex mathematical problems, PDE are very useful
+ Far from being just complex mathematical problems, PDEs are very useful
  tools to model several different phenomena in Physics, Biology, Economics
  and Engineering.
- Maxwell's laws of Electromagnetic fields and Navier-Stokes equations for
+ Maxwell's laws of electromagnetic fields and Navier-Stokes equations for
  fluids are just two examples of major applications of PDE theory.
  However, PDEs are usually impossible to solve in closed form: numerical
  methods are required to compute approximate solutions.
- The most used methods to solve PDE numerically are known as Finite Element
+ The most used methods to solve PDEs numerically are known as Finite Element
  Methods.
  First introduced in the '40s FEMs utility was underestimated at the time
  because of the lack of computational power.
@@ -354,7 +380,7 @@ reference "eq:debole"
  We impose this condition and we get to the following linear system:
 \begin_inset Formula 
 \begin{equation}
-\sum_{i=1}^{n}u_{i}\int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{j}=\int_{\Omega}f\cdot\varphi_{j}\;\;\forall j=1...n
+\sum_{i=1}^{n}u_{i}\int_{\Omega}\nabla\varphi_{i}\cdot\nabla\varphi_{j}=\int_{\Omega}f\cdot\varphi_{j}\;\;\forall j=1...n\label{eq:FEM-sys}
 \end{equation}
 
 \end_inset
@@ -515,7 +541,7 @@ We choose this very equation because we can deduce the true solution.
  If we try 
 \begin_inset Formula 
 \begin{equation}
-u\left(x,y\right)=x^{2}+y^{2}
+\tilde{u}\left(x,y\right)=x^{2}+y^{2}
 \end{equation}
 
 \end_inset
@@ -523,38 +549,71 @@ u\left(x,y\right)=x^{2}+y^{2}
 we get:
 \begin_inset Formula 
 \begin{equation}
--\Delta u\left(x,y\right)=-\frac{\partial^{2}u\left(x,y\right)}{\partial x^{2}}-\frac{\partial^{2}u\left(x,y\right)}{\partial y^{2}}=-2-2=-4
+-\Delta\tilde{u}\left(x,y\right)=-\frac{\partial^{2}\tilde{u}\left(x,y\right)}{\partial x^{2}}-\frac{\partial^{2}\tilde{u}\left(x,y\right)}{\partial y^{2}}=-2-2=-4
 \end{equation}
 
 \end_inset
 
 As the solution to such a problem is proved to be unique, 
-\begin_inset Formula $u\left(x,y\right)$
+\begin_inset Formula $\tilde{u}$
 \end_inset
 
  is the function we are looking for.
 \end_layout
 
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Serial implementation
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Serial-implementation"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-We shall consider now the actual C-language implementation of the algorithm
- that does approximate the solution of the given problem with a finite elements
- approach.
- In order to focus on the interesting parts, we will disregard I/O operations
- that are useful to the program execution but do not represent any case
+We shall consider now the actual C-language implementation
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+The code is hosted in a Github repository: 
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+https://github.com/donlelef/parallel-pde.git
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+ of the algorithm that compute the approximate solution of the given problem
+ with a finite elements approach.
+ In order to focus on the interesting parts, we will disregard I/O operations:
+ they are essential to the program execution but do not represent any case
  of study.
 \end_layout
 
 \begin_layout Standard
-Roughly speaking, the developed code can easily be split into four parts:
- 
+Roughly speaking, the code can be split into four sections: 
 \end_layout
 
 \begin_layout Enumerate
-Memory allocation and initialisation for both the Stiffness matrix 
+Memory allocation and initialisation for both the stiffness matrix 
 \family roman
 \series medium
 \shape up
@@ -590,7 +649,7 @@ Memory allocation and initialisation for both the Stiffness matrix
 \end_layout
 
 \begin_layout Enumerate
-Computation of the global Stiffness matrix 
+Computation of the global stiffness matrix 
 \family roman
 \series medium
 \shape up
@@ -674,12 +733,47 @@ Memory allocation and variable initialisation
 \end_layout
 
 \begin_layout Standard
-As we stated, the very first task that the algorithm must handle is a proper
- memory dynamic allocation that allow us to store both the Stiffness matrix
- and the right-hand side.
- In order to improve memory usage and to uniform access, the matrix is indeed
- stored as a linear 1D vector.
- The function that implement this initialisation is shown below.
+The very first task the algorithm must handle is a proper dynamic memory
+ allocation, to store both the stiffness matrix and the right-hand side.
+ In order to improve memory usage and to make the access uniform, the matrix
+ is stored as a linear 1D vector.
+ Once allocated, all the elements of both the stiffness matrix and the right-han
+d side must be set to zero, as the assembling procedure (
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Assembling-serial"
+
+\end_inset
+
+) requires.
+ Disregarding the initial part that simply allocates required memory space,
+ we notice that the initialisation actually results in 
+\begin_inset Formula $n$
+\end_inset
+
+ store calls, 
+\begin_inset Formula $n$
+\end_inset
+
+ being the dimension of the vector.
+ In our case, that leads us to 
+\begin_inset Formula $N^{2}+N$
+\end_inset
+
+ store calls, where 
+\begin_inset Formula $N$
+\end_inset
+
+ equals the number of vertices in the given mesh.
+ The function implementing allocation and initialisation is shown in Algorithm
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Memory-allocation-serial"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
@@ -739,7 +833,13 @@ double* zeros(int dim) {
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Memory allocation and variable initialization
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Memory-allocation-serial"
+
+\end_inset
+
+Memory allocation and variable initialisation.
 \end_layout
 
 \end_inset
@@ -750,39 +850,55 @@ Memory allocation and variable initialization
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-Disregarding the initial part that simply allocates required memory space,
- we notice that the initialisation actually results in 
-\begin_inset Formula $n$
-\end_inset
-
- store calls, 
-\begin_inset Formula $n$
-\end_inset
-
- being the dimension of the vector.
- In our case, that lead us to 
-\begin_inset Formula $n^{2}+n$
-\end_inset
-
- store calls, with this time 
-\begin_inset Formula $n$
-\end_inset
-
- equal to the number of vertices in the given mesh.
 \end_layout
 
 \begin_layout Subsection
-Assembling of the Stiffness matrix and the right-hand side
+Assembling of the stiffness matrix and the right-hand side
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Assembling-serial"
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-The code under consideration is shown below.
+The assembling operation is realised by initially calling, for each one
+ of the 
+\begin_inset Formula $N$
+\end_inset
+
+ vertices in the mesh, two functions that compute local elements and then
+ summing them back to the global ones.
+ As every local contribute is summed to the existing values, the stiffness
+ matrix and the vector should be initialised to zero.
+ The map between triangles and local indices of triangles is stored in a
+ preinitalized matrix.
+ The code under consideration is shown Algorithm 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Assembling-serial"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
+Since the computation of local elements uses only values at the three vertices
+ of the local triangle, its complexity is independent from 
+\begin_inset Formula $N$
+\end_inset
+
+, and can thus be ignored.
+ As a result, we can state that the overall complexity of the assembling
+ task is 
+\begin_inset Formula $O\left(N\right)$
+\end_inset
+
+, i.e.
+ linear with respect to the dimension of the mesh.
 \begin_inset Float algorithm
 wide false
 sideways false
@@ -830,7 +946,7 @@ for (tri = 0; tri < vertexSize; tri++) {
 
 \begin_layout Plain Layout
 
-	localStiffnessMatrix(vertices, localW); 		
+	localstiffnessMatrix(vertices, localW); 		
 \end_layout
 
 \begin_layout Plain Layout
@@ -893,7 +1009,13 @@ for (tri = 0; tri < vertexSize; tri++) {
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Assembling of the Stiffness matrix and the right-hand side
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Assembling-serial"
+
+\end_inset
+
+Assembling of the stiffness matrix and the right-hand side.
 \end_layout
 
 \end_inset
@@ -904,30 +1026,6 @@ Assembling of the Stiffness matrix and the right-hand side
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-The assembling operation is realised by initially calling, for each one
- of the 
-\begin_inset Formula $n$
-\end_inset
-
- vertices in the mesh, two functions that compute local elements then summing
- them back to the global ones (the very ones initialised at the previous
- step).
- Since the computation of local elements uses only values at the three vertices
- of the local triangle, its complexity is independent from 
-\begin_inset Formula $n$
-\end_inset
-
-, and can thus be ignored.
- As a result, we can state that the overall complexity of the assembling
- task is 
-\begin_inset Formula $O\left(n\right)$
-\end_inset
-
-, i.e.
- linear with respect to the dimension of the mesh.
 \end_layout
 
 \begin_layout Subsection
@@ -935,33 +1033,42 @@ Dirichlet conditions assignment
 \end_layout
 
 \begin_layout Standard
-At this point, before starting the computation of the solution, we must
- assign particular values to the Stiffness matrix and the right-hand side
- in order to make Dirichlet conditions hold on the boundary of the domain
- under consideration.
- In other words, we have to retrieve those vertices that do belong to the
- boundary of the domain and assign particular values at the correspondent
- positions.
- By looking at the function, whose code implementation is shown below, we
- can easily notice that the number of operations is in the order of 
-\begin_inset Formula $n\cdot\left(1+n_{boundary}\right)$
+Before starting the computation of the solution, we must assign particular
+ values to the stiffness matrix and the right-hand side in order to make
+ Dirichlet conditions hold on the boundary of the domain.
+ We have to retrieve the vertices on boundary of the domain and assign particula
+r values at the correspondent row in the stiffness matrix and the right-hand
+ side vector.
+ By looking at the implementation - code is shown in Algorithm 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:Dirichlet-serial"
+
+\end_inset
+
+ - we can notice that the number of operations is in the order of 
+\begin_inset Formula $N\cdot\left(1+N_{boundary}\right)$
 \end_inset
 
  where 
-\begin_inset Formula $n_{boundary}$
+\begin_inset Formula $N_{boundary}$
 \end_inset
 
  is the number of vertices on the boundary.
- Since, as 
-\begin_inset Formula $n$
+ Since this number grows almost linearly with 
+\begin_inset Formula $N$
 \end_inset
 
- grows, this number is much less than the total number 
-\begin_inset Formula $n$
+ when 
+\begin_inset Formula $N$
 \end_inset
 
-, the total number of operations is approximately linear with 
-\begin_inset Formula $n$
+ is big enough, the total amount of operations can be approximate with 
+\begin_inset Formula $N\left(1+\alpha N\right)=N+\alpha N^{2}$
+\end_inset
+
+, which is 
+\begin_inset Formula $O\left(N^{2}\right)$
 \end_inset
 
 .
@@ -1050,7 +1157,13 @@ void assignDirichletCondition(int meshSize, double g, double* meshPoints,
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Dirichlet conditions assignment
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:Dirichlet-serial"
+
+\end_inset
+
+Dirichlet conditions assignment.
 \end_layout
 
 \end_inset
@@ -1068,35 +1181,53 @@ Computation of the approximate solution
 \end_layout
 
 \begin_layout Standard
-Finally, with both the matrix and the right-hand side properly assigned,
- it is possible to compute the FEM approximation of the solution 
+With both the matrix and the right-hand side properly assigned, it is possible
+ to compute the FEM approximation of the solution 
 \begin_inset Formula $u$
 \end_inset
 
 .
- Technically speaking, that requires to solve a linear system with 
-\begin_inset Formula $n$
+ As equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:FEM-sys"
+
+\end_inset
+
+ points out, the procedure requires to solve a linear system with 
+\begin_inset Formula $N$
 \end_inset
 
  equations in 
-\begin_inset Formula $n$
+\begin_inset Formula $N$
 \end_inset
 
  unknowns.
- This is achieved with two functions that implement the Gaussian Elimination
- algorithm: at first, the whole system is changed with several pivot operations
- till an upper-triangular structure is reached; then, the solutions is computed
- backward.
- The cost for computing the upper triangular system is in the order of 
-\begin_inset Formula $\frac{n^{3}}{3}$
+ The system is solved by two functions that implement the Gaussian Elimination
+ algorithm: at first, the stiffness matrix and the right-hand side are modified
+ with several pivot operations till an upper-triangular structure is reached;
+ then the solutions is computed backward - Algorithm 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:GEM-serial"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+The cost for computing the upper triangular system is in the order of 
+\begin_inset Formula $\frac{N^{3}}{3}$
 \end_inset
 
  ; the cost for solving the upper triangular system is 
-\begin_inset Formula $n^{2}$
+\begin_inset Formula $N^{2}$
 \end_inset
 
- , so that the total asymptotically complexity is 
-\begin_inset Formula $O\left(\frac{n^{3}}{3}+n^{2}\right)$
+, so that the total asymptotically complexity is 
+\begin_inset Formula $O\left(\frac{N^{3}}{3}+N^{2}\right)$
 \end_inset
 
 .
@@ -1105,9 +1236,34 @@ Finally, with both the matrix and the right-hand side properly assigned,
 
 \begin_layout Standard
 As we will see later, this is actually the bottleneck of the whole program.
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename image/GaussianAlgo.png
+	width 38text%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Gaussian elimination algorithm.
 \end_layout
 
-\begin_layout Standard
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \begin_inset Float algorithm
 wide false
 sideways false
@@ -1115,6 +1271,7 @@ status collapsed
 
 \begin_layout Plain Layout
 \begin_inset listings
+lstparams "language=C,numbers=left"
 inline false
 status open
 
@@ -1144,32 +1301,32 @@ double* gaussianElimination(int n, double* matrix, double b[]) {
 
 \begin_layout Plain Layout
 
-	/* Gaussian elimination */ 	
+	/* Gaussian Elimination */
 \end_layout
 
 \begin_layout Plain Layout
 
-	for (i = 0; i < (n - 1); i++) { 		
+	for (j = 0; j < (n - 1); j++) { 	
 \end_layout
 
 \begin_layout Plain Layout
 
-		for (j = (i + 1); j < n; j++) { 			
+		for (i = (j + 1); i < n; i++) { 			
 \end_layout
 
 \begin_layout Plain Layout
 
-			aux = *(matrix + n * j + i) / *(matrix + n * i + i); 			
+			aux = *(matrix + n * i + j) / *(matrix + n * j + j); 			
 \end_layout
 
 \begin_layout Plain Layout
 
-			for (k = i; k < n; k++) { 				
+			for (k = j; k < n; k++) { 				
 \end_layout
 
 \begin_layout Plain Layout
 
-				*(matrix + n * j + k) -= (aux * (*(matrix + n * i + k))); 			
+				*(matrix + n * i + k) -= (aux * (*(matrix + n * j + k))); 			
 \end_layout
 
 \begin_layout Plain Layout
@@ -1179,7 +1336,7 @@ double* gaussianElimination(int n, double* matrix, double b[]) {
 
 \begin_layout Plain Layout
 
-			b[j] -= (aux * b[i]); 		
+			b[i] -= (aux * b[j]); 		
 \end_layout
 
 \begin_layout Plain Layout
@@ -1189,7 +1346,7 @@ double* gaussianElimination(int n, double* matrix, double b[]) {
 
 \begin_layout Plain Layout
 
-	}
+	} 
 \end_layout
 
 \begin_layout Plain Layout
@@ -1257,7 +1414,13 @@ double* gaussianElimination(int n, double* matrix, double b[]) {
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-Computation of the approximate solution
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:GEM-serial"
+
+\end_inset
+
+Computation of the approximate solution.
 \end_layout
 
 \end_inset
@@ -1265,33 +1428,48 @@ Computation of the approximate solution
 
 \end_layout
 
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
 \end_inset
 
 
 \end_layout
 
 \begin_layout Section
-Profiling of the serial execution
+Profiling the serial execution
 \end_layout
 
 \begin_layout Standard
-After this brief study of the theoretical complexity of each one of the
- kernel functions, we shall now analyse the actual results obtained by running
- the code on a computer machine.
+After this brief study of the theoretical complexity of each kernel function,
+ we shall now analyse the actual results obtained by running the code on
+ a computer.
  
 \end_layout
 
 \begin_layout Standard
-Several simulations were run on a Intel i7-2630QM machine to study the computati
-on time growth with respect to different mesh dimensions.
- All interesting parameters related to the CPU under consideration are listed
- below.
+Several simulations were performed on an Intel i7-2630QM machine to study
+ the computation time growth with respect to different mesh dimensions.
+ All the interesting parameters related to the CPU under consideration are
+ listed below.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
 <lyxtabular version="3" rows="2" columns="8">
-<features rotate="0" islongtable="true" headTopDL="true" headBottomDL="true" longtabularalignment="center">
+<features rotate="0" tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
@@ -1300,8 +1478,8 @@ on time growth with respect to different mesh dimensions.
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
-<row endhead="true">
-<cell alignment="center" valignment="top" usebox="none">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1312,7 +1490,7 @@ Processor
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1323,7 +1501,7 @@ RAM
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1334,7 +1512,7 @@ Clock
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1345,7 +1523,7 @@ Cores
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1356,7 +1534,7 @@ Threads
 
 \end_inset
 </cell>
-<cell multirow="3" alignment="center" valignment="middle" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1367,7 +1545,7 @@ L1 cache
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1378,7 +1556,7 @@ L2 cache
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -1469,21 +1647,42 @@ i7-2630QM
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Intel i7-2630QM features.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 For each function, we computed both the wall clock time, which is the actual
- amount of time taken to perform the job, and the CPU time, which is on
- the other hand the amount of time the function did hold the CPU during
- its execution.
- In order to keep the overhead as light as we could, we avoided the usage
- of professional profiling tools, which by the way usually offer sampling
- frequencies which are completely useless in our case of study.
- Hence, we used instead native functions, in particular 
+ amount of time taken to perform the job, and the CPU time, which is the
+ amount of time the function actually holds the CPU during its execution.
+ Common profiling tools, like gprof, offer a resolution in the order of
+ the tenths of milliseconds: looking at the values in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Profiling-serial"
+
+\end_inset
+
+, we consider such a precision too little.
+ Moreover, they regularly sample the call stack, introducing more instruction
+ and thus generating an overhead which may lead to untrustworthy results.
+ Hence, we used native functions, in particular 
 \family typewriter
-omp_get_wtime
+omp_get_wtime() 
 \family default
- of 
+of 
 \family typewriter
 omp.h
 \family default
@@ -1497,13 +1696,28 @@ time.h
 \family default
  for CPU time.
  Both timers has resolutions in the order of microseconds.
+ 
 \end_layout
 
 \begin_layout Standard
-The raw data we collected is shown in the following table.
+The raw data we collected are shown in the following Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Profiling-serial"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Standard
+\begin_inset Float table
+placement H
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
 \begin_inset Tabular
 <lyxtabular version="3" rows="11" columns="7">
 <features rotate="0" islongtable="true" headTopDL="true" headBottomDL="true" longtabularalignment="center">
@@ -2248,12 +2462,39 @@ Gaussian Elimination
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Profiling-serial"
+
+\end_inset
+
+Profiling of the serial execution time (seconds).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-Since the simulations were run minimising the number of concurrent jobs,
- we notice that the wall clock time and CPU time do not actually differ
- too much.
+Since the simulations were run minimising the number of concurrent jobs
+ other than the program under test, we notice that the wall clock time and
+ CPU time do not actually differ significantly - see Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:CPU-vs-Wall"
+
+\end_inset
+
+.
  Hence, from now on we will consider just the CPU time measurement, indeed
  more significant.
 \end_layout
@@ -2272,7 +2513,7 @@ status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename /home/lele/git/parallel-pde/Report/image/cpuClock.pdf
+	filename image/cpuClock.pdf
 	width 50text%
 
 \end_inset
@@ -2299,7 +2540,7 @@ status collapsed
 
 \begin_layout Plain Layout
 \begin_inset Graphics
-	filename /home/lele/git/parallel-pde/Report/image/cpuClockZoom.pdf
+	filename image/cpuClockZoom.pdf
 	width 50text%
 
 \end_inset
@@ -2322,7 +2563,13 @@ Zoom.
 \begin_inset Caption Standard
 
 \begin_layout Plain Layout
-CPU time and wall clock time.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:CPU-vs-Wall"
+
+\end_inset
+
+CPU time and wall clock time (seconds).
 \end_layout
 
 \end_inset
@@ -2336,11 +2583,29 @@ CPU time and wall clock time.
 \end_layout
 
 \begin_layout Standard
-To better understand the results, we plotted for each function both the
- expected trend and the real one; moreover, to highlight asymptotic complexity,
- we also provided log-log scale plots.
+To better understand the results, for each function we plot both the expected
+ trend and the real one; moreover, to highlight asymptotic complexity, we
+ also provide log-log scale plots.
+ On each plot, an equation showing the theoretical prediction has been added.
+ It is the output of a least square regression performed on the data shown
+ in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Profiling-serial"
+
+\end_inset
+
+ with the models described in Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Serial-implementation"
+
+\end_inset
+
+.
  
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -2368,6 +2633,7 @@ Initialisation.
 
 
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -2395,6 +2661,7 @@ Assembling.
 
 
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -2422,6 +2689,7 @@ Dirichlet condition assignment.
 
 
 \begin_inset Float figure
+placement H
 wide false
 sideways false
 status collapsed
@@ -2451,54 +2719,62 @@ Gaussian elimination (theoretical prediction is almost perfectly overlapped
 
 \end_layout
 
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Parallel implementation
 \end_layout
 
 \begin_layout Standard
-The simulations run on the machine showed how fast the computation time
- grows with respect to the mesh size.
- They also highlighted how the bottleneck of the whole program is indeed
- represented by the Gaussian Elimination algorithm, exactly how the theoretical
- study suggested.
+The simulations run on the machine show how fast the computation time grows
+ with respect to the mesh size.
+ They also highlighted how the bottleneck of the whole program is the Gaussian
+ Elimination algorithm, in agreement with what the theoretical study suggests.
  
 \end_layout
 
 \begin_layout Standard
-Those results, however, were obtained by running the code in a serial fashion,
+Those results, however, are obtained by running the code in a serial fashion,
  thus wasting possible available parallelism offered by multicore machines.
  In other words, the application we considered till now is absolutely not
  scalable.
- On a multicore machine, instead, we could think of spreading the job among
- cores, thus decreasing computation time with a factor equal to the number
+ A multicore machine, instead, lets us spread the job among cores, thus
+ decreasing computation time with a factor theoretically equal to the number
  of available cores.
- Of course, this is never the case: due to data dependencies, only a fraction
- of the code can actually run in parallel.
- Moreover, the parallelization introduces a bit of overhead due to cores
- communication and synchronization that also contributes in decrease the
- gain we get with parallel execution.
+ Of course, this is never the case: because of data dependencies, only a
+ fraction of the code can actually run in parallel.
+ Moreover, when more than one thread is running, job distribution, resource
+ access and synchronisation must be taken into account.
+ The only way to do so is to add more instruction, thus slowing the execution.
+ Parallelization is worth introducing only if the gain in computation speed
+ is higher than the loss due to overhead.
 \end_layout
 
 \begin_layout Standard
-Nevertheless, an improvement in performance can certainly be obtained: we
- shall see later in details how much and why.
+As the code involves a lot of computations, an improvement in performance
+ can be obtained: we shall see later in details how much and why.
 \end_layout
 
 \begin_layout Standard
-The tools to build parallel code were provided by the Open-MP API interface,
+The tools to build parallel code are provided by the Open-MP API interface,
  a set of compiler directives, library routines and environment variables
  that allow to build parallel applications on shared memory systems.
- We will not cover technology specifications for the API, since this is
- not the aim of this report.
+ We will not cover technical specifications for the API, since this is not
+ the aim of this report.
  However, we will define and describe accurately every directive we actually
- used to develop the parallel code.
+ use to develop the parallel code.
 \end_layout
 
 \begin_layout Standard
 As we did for the serial ones, we will carry out the analysis function by
  function: for each one of them, we will study available parallelism and
- describe the developed implementation, along with the reasons beneath any
- choice we made.
+ describe the implementation, along with the reasons beneath any choice
+ we made.
 \end_layout
 
 \begin_layout Subsection
@@ -2506,15 +2782,15 @@ Memory allocation and variable initialisation
 \end_layout
 
 \begin_layout Standard
-As we already described , this function allocates the memory required given
+As we already described, this function allocates the memory required given
  the dimension of the linear vector, and eventually sets to zero the value
  of each element.
- Disregarding allocation operation, we notice that the operations are completely
- independent one another, so the fraction 
+ Disregarding allocation, we notice that the operations are completely independe
+nt one another, so the fraction 
 \begin_inset Formula $fraction_{parallel}$
 \end_inset
 
- of the code that can potentially run in parallel is approximately 1.
+ of the code that can run in parallel is approximately 1.
  If 
 \begin_inset Formula $t_{serial}$
 \end_inset
@@ -2525,18 +2801,17 @@ As we already described , this function allocates the memory required given
 
  is the number of threads that run in parallel, one should have 
 \begin_inset Formula 
-\[
-t_{parallel}=(1-fraction_{parallel})\cdot t_{serial}+fraction_{parallel}\cdot\frac{t_{serial}}{N}\sim\frac{t_{serial}}{N}
-\]
+\begin{equation}
+t_{parallel}=(1-fraction_{parallel})\cdot t_{serial}+fraction_{parallel}\cdot\frac{t_{serial}}{N}\simeq\frac{t_{serial}}{N}
+\end{equation}
 
 \end_inset
 
-
+which represents an ideal speed-up equal to the number of running threads.
+ The parallel implementation is shown in the 
 \end_layout
 
 \begin_layout Standard
-which represent an ideal speed-up equal to the number of running threads.
- The parallel version of this function is shown below.
 \begin_inset Float algorithm
 wide false
 sideways false
@@ -2617,37 +2892,761 @@ Memory allocation and variable initialisation.
 \end_layout
 
 \begin_layout Standard
-The whole procedure is realized by a loop that scans the vector and writes
+The whole procedure is realised by a loop that scans the vector and writes
  into indexed element.
- Hence, the parallelization is realized using the directive 
+ Hence, the parallelization is realised using the directive 
 \family typewriter
-#pragma omp paralell for private(i) schedule(static)
+#pragma omp paralell for
 \family default
-, that splits the operations among threads and then let them execute.
- The clauses 
+, that splits the iteration among threads and then let them execute.
+ The clause 
 \family typewriter
 private(i)
 \family default
-and 
+ specifies that the variable used as loop counter has to be private for
+ each thread: we thus avoid the same element of the vector to be processed
+ by more than one thread.
+ We observed that every basic operation is a single 
+\family typewriter
+store
+\family default
+: the computational load is evenly distributed among all the threads.
+ This is the reason why we decided to use the 
 \family typewriter
 schedule(static)
 \family default
-specify that the variable used as loop counter has to be private for each
- thread and that the load must be equally balanced between them.
- The parallel implementation thus obtained is shown below.
+ clause, which assign the same number of iterations to every thread.
+ By default openMP gives every thread the total number of iteration divided
+ by the number of threads, avoiding further distribution and thus keeping
+ the granularity as low as possible and minimising the overhead.
 \end_layout
 
 \begin_layout Standard
+The reason why an 
+\family typewriter
+__attribute__ ((aligned (16)))
+\family default
+ has been added to the declaration of the vector will be explained in Section
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:Beyond-instruction"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsection
+Assembling of the stiffness matrix and the right-hand side
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Assembling-par-analysis"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The assembling procedure is made of several nested loops: each loop, but
+ the outer one, contains a relatively small number of operations.
+ Each iteration of the outer loop is independent from all the others, so
+ it can be turned in a single parallel region.
+ However, updates to the global stiffness matrix and the global right-hand
+ side must be carefully handled.
+ The pointers to the data structures are shared among all the running threads;
+ but they must be accessed serially in order to prevent unpredictable results.
+ If every memory access were negligible, the expected speedup would be close
+ to the number of threads.
+ However, this algorithm requires the access to four different data structure:
+ the matrix of the global indices of vertices, the matrix of their coordinates,
+ the stiffness matrix and the right-hand side vector.
+ As the global index of the vertices of the triangle are almost randomly
+ distributed, the other data structures are not accessed with a regular
+ pattern, thus stressing memory hierarchy.
+ Considering, for instance, the biggest mesh size 
+\begin_inset Formula $M$
+\end_inset
+
+ we used, we can compute the size 
+\begin_inset Formula $W_{b}$
+\end_inset
+
+ of the stiffness matrix in byte:
+\begin_inset Formula 
+\begin{equation}
+W_{b}=M\cdot M\cdot8=13693^{2}\cdot8\simeq1,4\;GB
+\end{equation}
+
+\end_inset
+
+An irregular access pattern to such a matrix is likely to generate a lot
+ of full misses in the cache hierarchy.
+ Moreover, updates must be execute by one thread only.
+ As the bottleneck of the algorithm is memory access, we expect the parallelizat
+ion not to lead to a significant performance improvement: the overhead the
+ management of threads introduces is likely to nullify the gain in computational
+ time consumption.
+ The code for the parallel version of the function is shown below.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2,
+ vertices, localW, localB) schedule(static)
+\end_layout
+
+\begin_layout Plain Layout
+
+for (tri = 0; tri < vertexSize; tri++) {
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < 3; i++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		vertices[i][0] = *(meshPoints + globalVertex * 2 + 0); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		vertices[i][1] = *(meshPoints + globalVertex * 2 + 1); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+		
+\end_layout
+
+\begin_layout Plain Layout
+
+	localstiffnessMatrix(vertices, localW); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	localVector(vertices, f, localB);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < 3; i++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+#pragma omp critical			
+\end_layout
+
+\begin_layout Plain Layout
+
+		b[globalVertex] += localB[i]; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (j = 0; j < 3; j++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+			globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1;
+\end_layout
+
+\begin_layout Plain Layout
+
+#pragma omp critical				
+\end_layout
+
+\begin_layout Plain Layout
+
+			*(w + globalVertex * meshSize + globalVertex2) += localW[i][j]; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 		
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Assembling of the stiffness matrix and the right-hand side
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The cycle is made parallel with a 
+\family typewriter
+#pragma omp paralell for 
+\family default
+clause.
+ All the variables which refers to the local element and the position where
+ their contribution has to be added on the global stiffness matrix has to
+ be private.
+ The static scheduling is chosen because all the iterations are given the
+ same workload: computing fixed-dimension local matrix and vector and summing
+ them up to the global terms.
+ However, as the theoretical introduction points out, we have to guarantee
+ that one thread only is managing the global matrix at the same time: this
+ is the reason why we have to add a 
+\family typewriter
+#pragma omp critical 
+\family default
+clause to every instruction which reads or writes in the global matrix.
+ 
+\end_layout
+
+\begin_layout Subsection
+Dirichlet conditions assignment
+\end_layout
+
+\begin_layout Standard
+The kernel of the function is a 
+\family typewriter
+for
+\family default
+ loop which scans every row of the matrix and overwrites all the elements
+ in some of them.
+ As either one or no row is modified in every iteration, the are no dependencies
+ between them.
+ Theoretically, every iteration could run in parallel: in practice, the
+ maximum number of threads the machine can execute in the same time is a
+ physical limit.
+ Theoretically, the maximum time gain could be achieved:
+\begin_inset Formula 
+\begin{equation}
+t_{parallel}=(1-fraction_{parallel})\cdot t_{serial}+fraction_{parallel}\cdot\frac{t_{serial}}{N}\simeq\frac{t_{serial}}{N}
+\end{equation}
+
+\end_inset
+
+The code below shows the whole cycle included in a 
+\family typewriter
+#pragma omp paralell 
+\family default
+directive.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void assignDirichletCondition(int meshSize, double g, double* meshPoints,
+ double* w, double* b) { 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	int i, j;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+#pragma omp parallel for private(i, j) schedule(dynamic)
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (i = 0; i < meshSize; i++) { 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		double x = *(meshPoints + 2 * i); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		double y = *(meshPoints + 2 * i + 1); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		if (fabs(x * x + y * y - 1) < TOL) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			for (j = 0; j < meshSize; j++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+				*(w + meshSize * i + j) = (i == j) ? 1 : 0; 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			} 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			b[i] = g; 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Dirichlet conditions assignment
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The description of the algorithm suggest the load may be unfairly distributed
+ among different threads.
+ An iteration where the 
+\family typewriter
+if()
+\family default
+ clause is true is much more demanding than one where the same condition
+ is false.
+ A true condition leads to 
+\begin_inset Formula $n$
+\end_inset
+
+ additional operation, where 
+\begin_inset Formula $n$
+\end_inset
+
+ is the number of vertices of the mesh: moreover, it requires to access
+ a different matrix form the one which the condition is tested on.
+ The cache penalty is likely to be paid.
+ The 
+\family typewriter
+schedule(dynamic)
+\family default
+ clause faces the problem by assigning a new bunch of iteration to the first
+ thread which completes its job.
+ The aim is keeping the maximum number of threads working until the whole
+ cycle is over.
+ The price to pay is the overhead of the repeated job assignment: however,
+ it is much efficient than keeping one ore more threads inactive.
+ 
+\end_layout
+
+\begin_layout Subsection
+Computation of the approximate solution
+\end_layout
+
+\begin_layout Standard
+\begin_inset Wrap figure
+lines 0
+placement o
+overhang 0in
+width "40col%"
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename image/GaussianElimination.png
+	width 38text%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Scheme-of-GEM"
+
+\end_inset
+
+Scheme of Gaussian elimination algorithm.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+As the amount of time required to perform gaussian elimination is way less
+ than the one taken by the back substitution, we present only the parallel
+ version of the former.
+ As the serial profiling outlines, this function is the by far the most
+ time-consuming of the whole program, so a dependency analysis is required
+ to better understand which parts of the algorithm can be executed in parallel.
+ The picture 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Scheme-of-GEM"
+
+\end_inset
+
+
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://riebecca.blogspot.it/2008/12/supercomputing-course-openmp-syntax-and_15.html
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ shows which elements of the starting matrix 
+\begin_inset Formula $A\in\mathbb{R}^{n\times n}$
+\end_inset
+
+ are updated.
+ The kernel is composed by three loops: the first one scans the column of
+ 
+\begin_inset Formula $A$
+\end_inset
+
+: at its 
+\begin_inset Formula $k$
+\end_inset
+
+-th iteration, it reads the elements in the 
+\begin_inset Formula $k$
+\end_inset
+
+-th row and updates all the element 
+\begin_inset Formula $a_{i,j}$
+\end_inset
+
+ such that 
+\begin_inset Formula $i>k$
+\end_inset
+
+ and 
+\begin_inset Formula $j\geq k$
+\end_inset
+
+.
+ As the values in the 
+\begin_inset Formula $k$
+\end_inset
+
+-th row have been updated until the 
+\begin_inset Formula $k-1$
+\end_inset
+
+-th iteration, every iteration is dependent on the previous.
+ Every kind of parallelization is thus forbidden.
+ However, the update is performed via two more loops which scan the sub-matrix
+ 
+\begin_inset Formula $\tilde{A}=\left\{ a_{i,j}\right\} _{i,j>k}$
+\end_inset
+
+ - in green in Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Scheme-of-GEM"
+
+\end_inset
+
+.
+ The update of a row of 
+\begin_inset Formula $\tilde{A}$
+\end_inset
+
+ depends only on the elements of that row and on the 
+\begin_inset Formula $k$
+\end_inset
+
+-th row of 
+\begin_inset Formula $A$
+\end_inset
+
+, so all the rows can be processed in parallel.
+ As all the time-consuming operations are performed inside the parallel
+ loop, we expect the parallel algorithm to last 
+\begin_inset Formula $\frac{1}{N}$
+\end_inset
+
+ times the serial one, where 
+\begin_inset Formula $N$
+\end_inset
+
+ is the number of threads.
+ However, a non negligible overhead is introduced by the thread management
+ and synchronisation and the job assignments.
+ All these operations have to be repeated for every iteration of the outer
+ loops.
+ The parallel version of the function is shown below.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+void gaussianElimination(int n, double* matrix, double b[]){ 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	int j, i, k; 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	double aux;
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\end_layout
+
+\begin_layout Plain Layout
+
+	for (j = 0; j < (n - 1); j++) { 
+\end_layout
+
+\begin_layout Plain Layout
+
+#pragma omp parallel for private(aux, i, k) schedule(dynamic) 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		for (i = (j + 1); i < n; i++) { 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			aux = *(matrix + n * i + j) / *(matrix + n * j + j); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			for (k = j; k < n; k++) { 				
+\end_layout
+
+\begin_layout Plain Layout
+
+				*(matrix + n * i + k) -= (aux * (*(matrix + n * j + k))); 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			} 			
+\end_layout
+
+\begin_layout Plain Layout
+
+			b[i] -= (aux * b[j]); 		
+\end_layout
+
+\begin_layout Plain Layout
+
+		} 	
+\end_layout
+
+\begin_layout Plain Layout
+
+	} 
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computation of the approximate solution
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We decide to put the 
+\family typewriter
+#pragma omp parallel for
+\family default
+ clause on the outer of the two parallelizable loops to avoid too many thread
+ creation and deletion.
+ Following the result of a previous study
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+S.F.McGinn & R.E.Shaw, Parallel Gaussian Elimination Using OpenMP and MPI, 
+\begin_inset Flex URL
+status collapsed
+
+\begin_layout Plain Layout
+
+http://www3.nd.edu/~zxu2/acms60212-40212-S12/Gaussian-openMP.pdf
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ we choose dynamic scheduling.
+ However, Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Scheme-of-GEM"
+
+\end_inset
+
+ shows that the workload changes for every iteration of the outer serial
+ loop, while it remains constant over the iteration of the inner parallel
+ loop.
+ Thus, we believe a static scheduling could outperform a dynamic one, as
+ it prevents the overhead for several job assignment among different threads.
+ Data supporting our prediction are shown in Table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Static-and-dynamic"
+
+\end_inset
+
+.
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="11" columns="5">
-<features rotate="0" islongtable="true" headTopDL="true" headBottomDL="true" longtabularalignment="center">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top" width="0pt">
+<lyxtabular version="3" rows="4" columns="3">
+<features rotate="0" tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
-<row endhead="true">
-<cell alignment="center" valignment="top" usebox="none">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2658,7 +3657,587 @@ Mesh Size
 
 \end_inset
 </cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Dynamic
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Static
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
 <cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2173
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+22.951455
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+19.608431
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3447
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+97.125484
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+77.959359
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6084
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+513.480326
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+487.208414
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Static-and-dynamic"
+
+\end_inset
+
+Static and dynamic execution timing (seconds).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage newpage
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Profiling the parallel execution
+\end_layout
+
+\begin_layout Standard
+As we did for the serial execution, we shall now proceed analysing the execution
+ of the parallel code on computer machines.
+ The profiling operations are made in the same way of the serial one, but
+ this time simulations are run on different machines in order to study the
+ speed-up of parallel code with respect to the number of available cores/threads.
+ All interesting parameters related to the processors under consideration
+ are listed below.
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="4" columns="8">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Processor
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+RAM
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Clock
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Cores
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Threads
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+L1 I/D-cache
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+L2 cache
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+L3 cache
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+i7-2630QM
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4 GB
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2 GHz
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4x32 KB 8-way
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4x256 KB 8-way
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6 MB 12-way
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+i5-4210U
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+16 GB
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.7 GHz
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2x32 KB 8-way
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2x256 KB 8-way
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3 MB 12-way
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+i3-370M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4 GB
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.4 GHz
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2x32 KB 2/4-way
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2x256 KB 8-way
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3 MB 12-way
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Processors features.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+We will consider function by function the effect of the applied parallelization
+ and compare it to the theoretical behaviour predicted before.
+ For each kernel function we will show raw data, trends of computational
+ time and computed speed-up, which is the ratio between serial code computationa
+l time and parallel one.
+ Then we will comment the results and discuss whether or not they fit the
+ theoretical prediction.
+\end_layout
+
+\begin_layout Standard
+For each kernel function we will plot the trends of computational time for
+ the different machines, along with the serial one.
+ 
+\end_layout
+
+\begin_layout Subsection
+Memory allocation and variable initialisation
+\end_layout
+
+\begin_layout Standard
+As we expected, the overall CPU time the function requires to complete is
+ significantly reduced by the parallel implementation.
+ Apart form noise, the speedup is almost invariant with respect to the mesh
+ size, as we may expect form such a regular pattern of operations.
+ However, we expected a speedup very similar to the number of cores, but
+ the simulation results show that the real gain is almost the half.
+ We find two major causes of the difference: first of all, the number of
+ thread is two times the cores, thanks to Intel hyper-threading.
+ It means that two instruction flows are in execution on the same core:
+ when the first is blocked, the second proceeds.
+ However, this leads to a less significant improvement than two physical
+ cores.
+ On the other hand, a non negligible time is wasted in memory access: this
+ part of the code can hardly be made parallel by the software.
+ So, the real speedup is significant, but not as high as theoretical speculation
+s foresaw.
+ 
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="11" columns="5">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Mesh Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2669,7 +4248,7 @@ i3-370M Serial
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2680,7 +4259,7 @@ i3-370M Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -2691,7 +4270,7 @@ i5-4210U Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3178,6 +4757,20 @@ i7-2630QM Parallel
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational time for memory allocation and variable initialisation (seconds).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3206,170 +4799,29 @@ Memory allocation and initialisation time over mesh size.
 
 \end_layout
 
-\begin_layout Plain Layout
-
-\end_layout
-
 \end_inset
 
 
 \end_layout
 
-\begin_layout Subsection
-Assembling of the Stiffness matrix and the right-hand side
-\end_layout
-
 \begin_layout Standard
-\begin_inset Float algorithm
+\align center
+\begin_inset Float table
 wide false
 sideways false
 status collapsed
 
 \begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-#pragma omp parallel for private(tri, i, j, globalVertex, globalVertex2,
- vertices, localW, localB) schedule(static)
-\end_layout
-
-\begin_layout Plain Layout
-
-for (tri = 0; tri < vertexSize; tri++) {
-\end_layout
-
-\begin_layout Plain Layout
-
-	for (i = 0; i < 3; i++) { 			
-\end_layout
-
-\begin_layout Plain Layout
-
-		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1; 			
-\end_layout
-
-\begin_layout Plain Layout
-
-		vertices[i][0] = *(meshPoints + globalVertex * 2 + 0); 			
-\end_layout
-
-\begin_layout Plain Layout
-
-		vertices[i][1] = *(meshPoints + globalVertex * 2 + 1); 		
-\end_layout
-
-\begin_layout Plain Layout
-
-	}
-\end_layout
-
-\begin_layout Plain Layout
-
-		
-\end_layout
-
-\begin_layout Plain Layout
-
-	localStiffnessMatrix(vertices, localW); 		
-\end_layout
-
-\begin_layout Plain Layout
-
-	localVector(vertices, f, localB);
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-	for (i = 0; i < 3; i++) { 			
-\end_layout
-
-\begin_layout Plain Layout
-
-		globalVertex = (int) *(vertexNumbers + tri * 3 + i) - 1;
-\end_layout
-
-\begin_layout Plain Layout
-
-#pragma omp critical			
-\end_layout
-
-\begin_layout Plain Layout
-
-		b[globalVertex] += localB[i]; 			
-\end_layout
-
-\begin_layout Plain Layout
-
-		for (j = 0; j < 3; j++) { 				
-\end_layout
-
-\begin_layout Plain Layout
-
-			globalVertex2 = (int) *(vertexNumbers + tri * 3 + j) - 1;
-\end_layout
-
-\begin_layout Plain Layout
-
-#pragma omp critical				
-\end_layout
-
-\begin_layout Plain Layout
-
-			*(w + globalVertex * meshSize + globalVertex2) += localW[i][j]; 			
-\end_layout
-
-\begin_layout Plain Layout
-
-		} 		
-\end_layout
-
-\begin_layout Plain Layout
-
-	} 	
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Assembling of the Stiffness matrix and the right-hand side
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
+\align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="11" columns="5">
-<features rotate="0" islongtable="true" headTopDL="true" headBottomDL="true" longtabularalignment="center">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top" width="0pt">
+<lyxtabular version="3" rows="5" columns="4">
+<features rotate="0" tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
-<row endhead="true">
-<cell alignment="center" valignment="top" usebox="none">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3380,7 +4832,526 @@ Mesh Size
 
 \end_inset
 </cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i3-370M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i5-4210U
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i7-2630QM
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
 <cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2173
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.83
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.11
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.72
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3447
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.91
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.15
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.80
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6084
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.86
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.65
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.71
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+13693
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.61
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.06
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.71
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Speed-Up for memory allocation and variable initialisation
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Assembling the stiffness matrix and the right-hand side
+\end_layout
+
+\begin_layout Standard
+Being the piece of code which is most difficult to make parallel, as paragraph
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Assembling-par-analysis"
+
+\end_inset
+
+ points out, we expect little speedup.
+ However, the parallel code is even slower than the serial one.
+ We believe the critical regions to be the reason: because of the irregular
+ access pattern to the global matrix, most of the time is spent in updating
+ values in RAM memory.
+ This operation cannot be made parallel, so we nullify the gain in computations
+ speed by making the threads wait their turn to enter the critical regions.
+ In order to prove the hypothesis, we run on the i3-370M machine a simulation
+ where the critical region are wiped out.
+ The results are shown in table 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Execution-crit-non-crit"
+
+\end_inset
+
+.
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="4">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Mesh Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Serial
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Parallel
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Parallel without critical regions
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2173
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.001667
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.006988
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.001227
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3447
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.003327
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.011121
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.002010
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6084
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.007782
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.020323
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.003701
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+13693
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.026694
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.053064
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.011567
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Execution time with and without critical regions (seconds).
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Execution-crit-non-crit"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+Without the critical regions, the parallel code performs much better than
+ the serial one, while the performance drops when the blocking memory management
+ is imposed.
+ However, wiping the critical regions out is not a feasible solution, as
+ the output of the program which run without them is incoherent with the
+ one of the other executions and with the real solution of the partial different
+ial equation.
+ We have to conclude that, in a real-life situation, such an algorithm is
+ not worth parallelizing without previous modifications.
+ 
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="11" columns="5">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Mesh Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3391,7 +5362,7 @@ i3-370M Serial
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3402,7 +5373,7 @@ i3-370M Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3413,7 +5384,7 @@ i5-4210U Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -3900,6 +5871,20 @@ i7-2630QM Parallel
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational time for assembling (seconds).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -3933,126 +5918,24 @@ Assembling time over mesh size.
 
 \end_layout
 
-\begin_layout Subsection
-Dirichlet conditions assignment
-\end_layout
-
 \begin_layout Standard
-\begin_inset Float algorithm
+\align center
+\begin_inset Float table
 wide false
 sideways false
 status collapsed
 
 \begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-void assignDirichletCondition(int meshSize, double g, double* meshPoints,
- double* w, double* b) { 	
-\end_layout
-
-\begin_layout Plain Layout
-
-	int i, j;
-\end_layout
-
-\begin_layout Plain Layout
-
-\end_layout
-
-\begin_layout Plain Layout
-
-#pragma omp parallel for private(i, j) schedule(dynamic)
-\end_layout
-
-\begin_layout Plain Layout
-
-	for (i = 0; i < meshSize; i++) { 		
-\end_layout
-
-\begin_layout Plain Layout
-
-		double x = *(meshPoints + 2 * i); 		
-\end_layout
-
-\begin_layout Plain Layout
-
-		double y = *(meshPoints + 2 * i + 1); 		
-\end_layout
-
-\begin_layout Plain Layout
-
-		if (fabs(x * x + y * y - 1) < TOL) { 			
-\end_layout
-
-\begin_layout Plain Layout
-
-			for (j = 0; j < meshSize; j++) { 				
-\end_layout
-
-\begin_layout Plain Layout
-
-				*(w + meshSize * i + j) = (i == j) ? 1 : 0; 			
-\end_layout
-
-\begin_layout Plain Layout
-
-			} 			
-\end_layout
-
-\begin_layout Plain Layout
-
-			b[i] = g; 		
-\end_layout
-
-\begin_layout Plain Layout
-
-		} 	
-\end_layout
-
-\begin_layout Plain Layout
-
-	} 
-\end_layout
-
-\begin_layout Plain Layout
-
-} 
-\end_layout
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Dirichlet conditions assignment
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
+\align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="11" columns="5">
-<features rotate="0" islongtable="true" headTopDL="true" headBottomDL="true" longtabularalignment="center">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top" width="0pt">
+<lyxtabular version="3" rows="5" columns="4">
+<features rotate="0" tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
-<row endhead="true">
-<cell alignment="center" valignment="top" usebox="none">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4063,7 +5946,264 @@ Mesh Size
 
 \end_inset
 </cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i3-370M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i5-4210U
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i7-2630QM
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
 <cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2173
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.23
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.03
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.28
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3447
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.29
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.98
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.27
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6084
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.38
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.01
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.28
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+13693
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.50
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.92
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+0.28
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Speed-Up for assembling
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Dirichlet conditions assignment
+\end_layout
+
+\begin_layout Standard
+Simulations show that the parallel version is faster than the serial one,
+ as we expected from a priori study.
+ By spreading the condition assignment among threads, we obtained a relevant
+ speedup, although not as high as we predicted.
+ Again, this is caused either by hyper-threading, which let two threads
+ run on the same core alternatively thus decreasing performance, either
+ by overhead, in this case indeed relevant due to repeated assignment caused
+ by 
+\family typewriter
+schedule(dynamic)
+\family default
+clause.
+ As a result, we see a speedup which is approximately half the number of
+ threads.
+\end_layout
+
+\begin_layout Standard
+\align center
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="11" columns="5">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Mesh Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4074,7 +6214,7 @@ i3-370M Serial
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4085,7 +6225,7 @@ i3-370M Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4096,7 +6236,7 @@ i5-4210U Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4583,6 +6723,20 @@ i7-2630QM Parallel
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational time for Dirichlet conditions assignment (seconds).
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -4616,126 +6770,24 @@ Dirichlet condition assignment time over mesh size.
 
 \end_layout
 
-\begin_layout Subsection
-Computation of the approximate solution
-\end_layout
-
 \begin_layout Standard
-\begin_inset Float algorithm
+\align center
+\begin_inset Float table
 wide false
 sideways false
 status collapsed
 
 \begin_layout Plain Layout
-\begin_inset listings
-inline false
-status open
-
-\begin_layout Plain Layout
-
-void gaussianElimination(int n, double* matrix, double b[]){ 	
-\end_layout
-
-\begin_layout Plain Layout
-
-	int j, i, k; 	
-\end_layout
-
-\begin_layout Plain Layout
-
-	double aux;
-\end_layout
-
-\begin_layout Plain Layout
-
-	
-\end_layout
-
-\begin_layout Plain Layout
-
-	for (j = 0; j < (n - 1); j++) { 
-\end_layout
-
-\begin_layout Plain Layout
-
-#pragma omp parallel for private(aux, i, k) schedule(dynamic) 		
-\end_layout
-
-\begin_layout Plain Layout
-
-		for (i = (j + 1); i < n; i++) { 			
-\end_layout
-
-\begin_layout Plain Layout
-
-			aux = *(matrix + n * i + j) / *(matrix + n * j + j); 			
-\end_layout
-
-\begin_layout Plain Layout
-
-			for (k = j; k < n; k++) { 				
-\end_layout
-
-\begin_layout Plain Layout
-
-				*(matrix + n * i + k) -= (aux * (*(matrix + n * j + k))); 			
-\end_layout
-
-\begin_layout Plain Layout
-
-			} 			
-\end_layout
-
-\begin_layout Plain Layout
-
-			b[i] -= (aux * b[j]); 		
-\end_layout
-
-\begin_layout Plain Layout
-
-		} 	
-\end_layout
-
-\begin_layout Plain Layout
-
-	} 
-\end_layout
-
-\begin_layout Plain Layout
-
-}
-\end_layout
-
-\end_inset
-
-
-\begin_inset Caption Standard
-
-\begin_layout Plain Layout
-Computation of the approximate solution
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
+\align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="11" columns="5">
-<features rotate="0" islongtable="true" headTopDL="true" headBottomDL="true" longtabularalignment="center">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top" width="0pt">
+<lyxtabular version="3" rows="5" columns="4">
+<features rotate="0" tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
-<row endhead="true">
-<cell alignment="center" valignment="top" usebox="none">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4746,7 +6798,254 @@ Mesh Size
 
 \end_inset
 </cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i3-370M
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i5-4210U
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i7-2630QM
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
 <cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2173
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.08
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.69
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.49
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3447
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.08
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.77
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.27
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6084
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.08
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.91
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.11
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+13693
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.95
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.53
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.00
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Speed-Up for Dirichlet conditions assignment
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Computation of the approximate solution
+\end_layout
+
+\begin_layout Standard
+The results below show how the parallel version behaved in simulations with
+ respect to the serial one: a non negligible speedup is obtained, though
+ not as high as one could expect.
+ In addition to what has already been told, it is important to notice that
+ the parallelization directive stays inside the outer loop, thus requiring
+ more overhead and decreasing the speedup.
+ This is also made worse by the dynamic job assignment.
+ Resulting data and figures are shown below.
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="11" columns="5">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+Mesh Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4757,7 +7056,7 @@ i3-370M Serial
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4768,7 +7067,7 @@ i3-370M Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -4779,7 +7078,7 @@ i5-4210U Parallel
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
@@ -5266,10 +7565,20 @@ i7-2630QM Parallel
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Computational time for solving the system (seconds).
 \end_layout
 
-\begin_layout Standard
-\align center
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \begin_inset Float figure
 wide false
 sideways false
@@ -5297,287 +7606,72 @@ Gaussian elimination time over mesh size.
 \end_inset
 
 
-\end_layout
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
 
-\begin_layout Section
-Profiling of the parallel execution
-\end_layout
-
-\begin_layout Standard
-Like we did for the serial execution, we shall now proceed analysing the
- execution of the parallel code on computer machines.
- The profiling operations were made in the exact same way of the serial
- one, but simulations were run on different machines in order to study the
- speed-up of parallel code with respect to the number of available cores/threads.
- All interesting parameters related to the processors under consideration
- are listed below.
-\end_layout
-
-\begin_layout Standard
+\begin_layout Plain Layout
+\align center
 \begin_inset Tabular
-<lyxtabular version="3" rows="4" columns="8">
-<features rotate="0" islongtable="true" headTopDL="true" headBottomDL="true" longtabularalignment="center">
+<lyxtabular version="3" rows="5" columns="4">
+<features rotate="0" tabularvalignment="middle">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
 <column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<column alignment="center" valignment="top">
-<row endhead="true">
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-Processor
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-RAM
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-Clock
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-Cores
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-Threads
-\end_layout
-
-\end_inset
-</cell>
-<cell multirow="3" alignment="center" valignment="middle" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-L1 I/D-cache
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-L2 cache
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-
-\series bold
-L3 cache
-\end_layout
-
-\end_inset
-</cell>
-</row>
 <row>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-i7-2630QM
+
+\series bold
+Mesh Size
 \end_layout
 
 \end_inset
 </cell>
-<cell alignment="center" valignment="top" usebox="none">
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-4 GB
-\end_layout
 
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2 GHz
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-4
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-8
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-4x32 KB 8-way
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-4x256 KB 8-way
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-6 MB 12-way
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-i5-4210U
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-16 GB
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-1.7 GHz
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-4
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2x32 KB 8-way
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-2x256 KB 8-way
-\end_layout
-
-\end_inset
-</cell>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
-3 MB 12-way
-\end_layout
-
-\end_inset
-</cell>
-</row>
-<row>
-<cell alignment="center" valignment="top" usebox="none">
-\begin_inset Text
-
-\begin_layout Plain Layout
+\series bold
 i3-370M
 \end_layout
 
 \end_inset
 </cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i5-4210U
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+
+\series bold
+i7-2630QM
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
 <cell alignment="center" valignment="top" usebox="none">
 \begin_inset Text
 
 \begin_layout Plain Layout
-4 GB
+2173
 \end_layout
 
 \end_inset
@@ -5586,7 +7680,7 @@ i3-370M
 \begin_inset Text
 
 \begin_layout Plain Layout
-2.4 GHz
+2.09
 \end_layout
 
 \end_inset
@@ -5595,7 +7689,7 @@ i3-370M
 \begin_inset Text
 
 \begin_layout Plain Layout
-2
+1.31
 \end_layout
 
 \end_inset
@@ -5604,7 +7698,18 @@ i3-370M
 \begin_inset Text
 
 \begin_layout Plain Layout
-4
+3.45
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3447
 \end_layout
 
 \end_inset
@@ -5613,7 +7718,7 @@ i3-370M
 \begin_inset Text
 
 \begin_layout Plain Layout
-2x32 KB 2/4-way
+2.09
 \end_layout
 
 \end_inset
@@ -5622,7 +7727,7 @@ i3-370M
 \begin_inset Text
 
 \begin_layout Plain Layout
-2x256 KB 8-way
+1.30
 \end_layout
 
 \end_inset
@@ -5631,7 +7736,83 @@ i3-370M
 \begin_inset Text
 
 \begin_layout Plain Layout
-3 MB 12-way
+3.96
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6084
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.08
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.31
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.62
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+13693
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.66
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.30
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.77
 \end_layout
 
 \end_inset
@@ -5642,47 +7823,695 @@ i3-370M
 \end_inset
 
 
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Speed-Up for solving the system
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
-The raw data we collected, for each machine, is shown below.
-\end_layout
+\begin_inset Newpage newpage
+\end_inset
 
-\begin_layout Standard
-/table i3.serial, i5.serial, i7.serial/
-\end_layout
 
-\begin_layout Standard
-We shall now consider function by function the effect of the applied paralleliza
-tion, and compare it to the theoretical behaviour predicted before.
- For each one of the kernel functions, we plotted different trend of computation
- times when the code is run serial (as in the previous analysis) or in parallel
- on different machines (and therefore with a different number of available
- threads).
-\end_layout
-
-\begin_layout Subsection
-Memory allocation and variable initialisation
-\end_layout
-
-\begin_layout Subsection
-Assembling of the Stiffness matrix and the right-hand side
-\end_layout
-
-\begin_layout Subsection
-Dirichlet conditions assignment
-\end_layout
-
-\begin_layout Subsection
-Computation of the approximate solution
 \end_layout
 
 \begin_layout Section
-Result analysis
+Beyond instruction parallelism
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Beyond-instruction"
+
+\end_inset
+
+
 \end_layout
 
-\begin_layout Section
-A bit of insight
+\begin_layout Standard
+As a final experiment, we try to let the gcc compiler optimise the machine
+ code at its best.
+ By default, the GNU compiler goes for compilation speed
+\begin_inset Foot
+status collapsed
+
+\begin_layout Plain Layout
+GNU gcc official documentation, 
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+ and neglect assembly optimisation.
+ However, when we consider the Finite Elements algorithm, compilation speed
+ is a minor concern if compared to execution speed.
+ Looking at the code, we con identify several possible ways to optimise
+ the flow of machine instructions: 
+\end_layout
+
+\begin_layout Itemize
+All the functions we presented and analysed in the previous chapters involves
+ lots of floating points operation: some of them are performed in the same
+ way on consecutive elements of a vector.
+ We could get a double throughput if we processed two elements at once via
+ vectorised operations.
+\end_layout
+
+\begin_layout Itemize
+The kernel of most function is made of nested for loops, each of them made
+ of a small amount of instruction.
+ At assembling level, it means a big waste in time for the control instruction
+ (testing the counter, jumping, ...).
+ A solution is loop unrolling, that is merging more than one small iteration
+ into a single longer one.
+ This procedure is limited by data dependency and by the actual number of
+ available registers.
+\end_layout
+
+\begin_layout Itemize
+The data the algorithm requires are stored in large data structure in ram
+ memory.
+ Even when cache hierarchy works at its best - we pointed out it is not
+ always the case - every access to a resource which is outside the core
+ is expensive.
+ Optimising the memory access could lead to a big performance improvement.
+\end_layout
+
+\begin_layout Standard
+A human optimisation of such a complex procedure would be difficult and
+ may lead to several mistakes.
+ However, gcc compiler provides options to turn on automatic assembly optimisati
+on.
+ We launched a compilation on the i7-2630QM machine with the following command:
+ 
+\begin_inset Flex Code
+status open
+
+\begin_layout Plain Layout
+gcc -Wall -O3 -msse2 -fopenmp main.c -o main
+\end_layout
+
+\end_inset
+
+.
+ The 
+\family typewriter
+-O3
+\family default
+ flag make the compiler try all the improvements in the previous list: the
+ 
+\family typewriter
+-msse2
+\family default
+ options let the compiler use special 128-bit-long registers to perform
+ vectorised operations.
+ We profiled the execution and we shall present a comparison with the unoptimise
+d code.
+\end_layout
+
+\begin_layout Subsection
+A bit of insight: profiling the optimised code
+\end_layout
+
+\begin_layout Standard
+We provide a tabular and a graphical visualisation of the performance of
+ the optimised code over the serial one we considered until now - Table
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "tab:Speedup-of-optimised"
+
+\end_inset
+
+ and Figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:Optimised-and-non-profiling"
+
+\end_inset
+
+.
+ As we may expect, a substantial improvement has been achieved in all the
+ functions we considered.
+ However, the most important gain concerns the Gaussian elimination algorithm.
+ We try to understand why the improvement is so huge asking the compiler
+ to log vectorizations and loop unrolling.
+ Among the output, we get the following lines:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+parallelMain.c:121: note: vectorized 1 loops in function.
+\end_layout
+
+\begin_layout Plain Layout
+
+parallelMain.c:130: note: LOOP VECTORIZED.
+\end_layout
+
+\end_inset
+
+Line 130 is part of the function implementing gaussian elimination and contains
+ the inner loop which scans one of the columns of the submatrix to be updated.
+ Since this loop is repeated for all the columns of the stiffness matrix
+ and for all the rows of the submatrix to update, a speedup concerning this
+ fragment of code is critical for the overall performance.
+ Even if a deep analysis of the assembly the compiler produces is beyond
+ the aim of this report, we look for traces of the vectorization.
+ In a piece of code which is supposed to be part of the translation of the
+ gaussian elimination algorithm, we find the following lines:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+movsd  xmm0,QWORD PTR [rdx+rax*1]      
+\end_layout
+
+\begin_layout Plain Layout
+
+movhpd xmm1,QWORD PTR [rcx+rax*1+0x8]      
+\end_layout
+
+\begin_layout Plain Layout
+
+movhpd xmm0,QWORD PTR [rax+rdx*1+0x8]
+\end_layout
+
+\begin_layout Plain Layout
+
+mulpd  xmm1,xmm3      
+\end_layout
+
+\begin_layout Plain Layout
+
+subpd  xmm0,xmm1
+\end_layout
+
+\end_inset
+
+In Intel Instruction Set Architecture (ISA), 
+\family typewriter
+xmm* 
+\family default
+registers are 128-bit long and are used to perform vectorised operations.
+ Without any modification of the code, the compiler exploited its knowledge
+ of the program and the hardware of the machine to speed mathematical operations
+ up.
+ The only help we give it is the 
+\family typewriter
+__attribute__(aligned(16))
+\family default
+ clause we add to vectors declaration to make them 16-byte aligned in memory
+ and enhance the effectiveness of vectorised operations.
+\end_layout
+
+\begin_layout Standard
+In the output of the optimised compilation, we find the trace of several
+ loop unrollings: 
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+parallelMain.c:75: note: Completely unroll loop 2 times
+\end_layout
+
+\begin_layout Plain Layout
+
+parallelMain.c:48: note: Completely unroll loop 3 times
+\end_layout
+
+\begin_layout Plain Layout
+
+parallelMain.c:214: note: Completely unroll loop 3 times
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The first and the second loop are part of the secondary functions which
+ compute local stiffness matrix, while the latter is placed inside the assemblin
+g procedure.
+\end_layout
+
+\begin_layout Standard
+Altogether, the optimisation of the assembling let the program gain a greater
+ speedup than the mere parallelization of sections of code.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float table
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="5" columns="5">
+<features rotate="0" tabularvalignment="middle">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mesh Size
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Initialisation
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Assembling
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Dirichlet assignment
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Gaussian Elimination
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2173
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+4.38
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.93
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.73
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5.84
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3447
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.58
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.67
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.84
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6.19
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6084
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.59
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.65
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.82
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+6.03
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+13693
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+3.81
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+1.65
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+2.90
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+5.80
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Speedup of optimised code over non optimised serial.
+\begin_inset CommandInset label
+LatexCommand label
+name "tab:Speedup-of-optimised"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename image/zerosOpt.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Initialisation.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename image/assemblingOpt.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Assembling.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename image/dirichletOpt.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Dirichlet condition assignment.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename image/gaussOpt.eps
+	width 50text%
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Gaussian elimination
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Optimised and non optimised code execution time over mesh size.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:Optimised-and-non-profiling"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
 \end_layout
 
 \end_body

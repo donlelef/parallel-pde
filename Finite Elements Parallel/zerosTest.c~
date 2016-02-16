@@ -1,0 +1,17 @@
+#include <stdlib.h>
+
+double* zeros(int dim) {
+	int i = 0;
+	double* vector __attribute__ ((aligned (16)));
+	vector = (double*) malloc(sizeof(double) * dim);
+#pragma omp parallel for private(i) schedule(static)
+	for (i = 0; i < dim; i++) {
+		vector[i] = 0;
+	}
+	return vector;
+}
+
+int main(int argc, char **argv) {
+	double* vector = zeros(10);
+	return 0;
+}
